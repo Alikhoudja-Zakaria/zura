@@ -44,7 +44,7 @@ export default function MainLayout({
   ]
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-[#FDFBF9] overflow-hidden">
+    <div className={`flex h-[100dvh] flex-col bg-[#FDFBF9] overflow-hidden ${isDiscover ? 'overscroll-none touch-none select-none' : ''}`}>
       {/* Top Header (Hidden in chat rooms & discover) */}
       {!isChatRoom && !isDiscover && (
         <header className="flex h-14 items-center justify-between px-4 sm:px-6 md:hidden bg-white border-b border-gray-100 z-10 shrink-0">
@@ -62,7 +62,7 @@ export default function MainLayout({
       )}
 
       {/* Main Content — strictly overflow-hidden on Discover so outer page CANNOT scroll */}
-      <main className={`flex-1 ${isDiscover ? 'overflow-hidden' : 'overflow-y-auto'} ${isChatRoom ? 'pb-0' : 'pb-16'} md:pb-0 md:pl-20 min-h-0`}>
+      <main className={`flex-1 ${isDiscover ? 'overflow-hidden overscroll-none touch-none' : 'overflow-y-auto'} ${isChatRoom ? 'pb-0' : 'pb-16'} md:pb-0 md:pl-20 min-h-0`}>
         {children}
       </main>
 

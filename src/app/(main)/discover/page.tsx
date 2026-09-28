@@ -9,7 +9,7 @@ import MatchModal from '@/components/cards/MatchModal'
 import { CountryFlag } from '@/components/ui/CountryFlag'
 import { 
   X, RotateCcw, SlidersHorizontal, Sparkles, 
-  MapPin, ChevronDown, Check
+  MapPin
 } from 'lucide-react'
 
 export default function DiscoverPage() {
@@ -97,7 +97,7 @@ export default function DiscoverPage() {
     return true
   })
 
-  // Preload upcoming images so the next card is already in memory
+  // Preload upcoming images so the next card is already cached in memory
   useEffect(() => {
     if (filteredProfiles.length > 1 && filteredProfiles[1]?.photo1) {
       const img1 = new Image()
@@ -131,73 +131,35 @@ export default function DiscoverPage() {
   const isCustomFiltered = selectedCountry !== 'all' || interestFilter !== 'all' || !!citySearch
 
   return (
-    <div className="h-full w-full overflow-hidden flex flex-col items-center select-none bg-[#FDFBF9]">
+    <div className="relative h-full w-full overflow-hidden flex flex-col items-center justify-center p-2 sm:p-3 touch-none select-none overscroll-none bg-[#FDFBF9]">
       
-      {/* Sleek Badoo-style Top Bar (Only 48px, leaves maximum height for card) */}
-      <header className="w-full max-w-xl px-4 h-12 flex items-center justify-between shrink-0 z-20">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-black tracking-tight text-[#FF385C]">ZURA</span>
-          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-[#FF385C] border border-rose-100 font-sans">
-            زورة
-          </span>
-        </div>
+      {/* Clean Badoo Menu / Filter Button on Top-Right (No upper bar) */}
+      <button
+        type="button"
+        onClick={() => setShowFilterModal(true)}
+        className="absolute top-3.5 right-3.5 z-40 w-11 h-11 rounded-full bg-white shadow-lg flex items-center justify-center text-black hover:bg-gray-50 active:scale-95 transition-all cursor-pointer border border-gray-100"
+        title="Filter & Preferences"
+      >
+        <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <line x1="1" y1="1" x2="17" y2="1" />
+          <line x1="1" y1="7" x2="17" y2="7" />
+          <line x1="1" y1="13" x2="17" y2="13" />
+        </svg>
+        {isCustomFiltered && (
+          <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-[#FF385C] border-2 border-white"></span>
+        )}
+      </button>
 
-        {/* Active Filter Pill (Tapping opens Preferences) */}
-        <button
-          onClick={() => setShowFilterModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200/90 shadow-2xs hover:bg-gray-50 active:scale-95 transition-all text-xs font-bold text-gray-700 cursor-pointer"
-        >
-          {selectedCountry === 'algeria' ? (
-            <>
-              <CountryFlag country="algeria" size="xs" />
-              <span>Algeria</span>
-            </>
-          ) : selectedCountry === 'morocco' ? (
-            <>
-              <CountryFlag country="morocco" size="xs" />
-              <span>Morocco</span>
-            </>
-          ) : selectedCountry === 'tunisia' ? (
-            <>
-              <CountryFlag country="tunisia" size="xs" />
-              <span>Tunisia</span>
-            </>
-          ) : (
-            <span>🌍 All Maghreb</span>
-          )}
-
-          {interestFilter !== 'all' && (
-            <span className="text-gray-400 font-normal">
-              • {interestFilter === 'women' ? 'Women' : interestFilter === 'men' ? 'Men' : 'Friends'}
-            </span>
-          )}
-
-          <ChevronDown size={14} className="text-gray-400 ml-0.5" />
-        </button>
-
-        {/* Filter / Preferences Button (Badoo menu style ≡) */}
-        <button
-          onClick={() => setShowFilterModal(true)}
-          className="relative p-2.5 rounded-full bg-white border border-gray-200/90 shadow-2xs hover:bg-gray-50 active:scale-95 transition-all text-gray-700 cursor-pointer"
-          title="Filters & Preferences"
-        >
-          <SlidersHorizontal size={18} />
-          {isCustomFiltered && (
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#FF385C]"></span>
-          )}
-        </button>
-      </header>
-
-      {/* Main Full-Height Card Deck Area (Badoo style: Card takes up all available screen) */}
-      <div className="flex-1 w-full max-w-xl px-2.5 pb-2 pt-0.5 min-h-0 flex items-center justify-center relative">
+      {/* Main Full-Screen Card Deck Area (Card takes 100% of height, completely non-scrollable) */}
+      <div className="h-full w-full max-w-[430px] flex items-center justify-center relative touch-none overscroll-none">
         {loading ? (
-          <div className="h-full w-full max-w-[430px] rounded-[28px] bg-gray-900 border border-gray-800 shadow-sm animate-pulse flex flex-col justify-between p-6">
+          <div className="h-full w-full rounded-[28px] bg-gray-950 border border-gray-800 shadow-2xl animate-pulse flex flex-col justify-between p-6">
             <div className="h-8 w-44 bg-gray-800 rounded-lg mt-4"></div>
-            <div className="h-14 w-60 mx-auto bg-gray-800 rounded-full mb-6"></div>
+            <div className="h-16 w-64 mx-auto bg-gray-800 rounded-full mb-6"></div>
           </div>
         ) : filteredProfiles.length > 0 ? (
-          <div className="relative w-full h-full max-w-[430px]">
-            {/* Background Card (ALREADY LOADED BEHIND, exactly as requested!) */}
+          <div className="relative w-full h-full">
+            {/* Background Card (ALREADY LOADED BEHIND in DOM) */}
             {filteredProfiles.length > 1 && (
               <ProfileCard
                 key={filteredProfiles[1].uid}
@@ -207,7 +169,7 @@ export default function DiscoverPage() {
               />
             )}
 
-            {/* Active Foreground Card (Draggable horizontally, buttons swipe with pic) */}
+            {/* Foreground Active Card (Draggable horizontally, buttons swipe with pic) */}
             <ProfileCard
               key={filteredProfiles[0].uid}
               profile={filteredProfiles[0]}
@@ -216,7 +178,7 @@ export default function DiscoverPage() {
             />
           </div>
         ) : (
-          <div className="h-full w-full max-w-[430px] flex flex-col items-center justify-center text-center p-6 bg-white rounded-[28px] border border-gray-200/80 shadow-sm">
+          <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 bg-white rounded-[28px] border border-gray-200/80 shadow-md">
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-rose-50 text-2xl border border-rose-100 relative">
               {selectedCountry !== 'all' ? (
                 <CountryFlag country={selectedCountry} size="lg" />
@@ -260,7 +222,7 @@ export default function DiscoverPage() {
         )}
       </div>
 
-      {/* Full Preferences Modal Sheet (Filters hidden here, Badoo style) */}
+      {/* Preferences Modal Sheet (Filters hidden behind the ≡ menu button) */}
       {showFilterModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-[28px] p-6 w-full max-w-md shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
