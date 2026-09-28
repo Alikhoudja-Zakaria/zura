@@ -99,6 +99,16 @@ function getPersonaIcebreaker(bot: UserProfile, user: UserProfile): string {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+// Normalize text: replace curly quotes, strip accents, collapse spaces
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u0060\u00B4]/g, "'")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents: é -> e, où -> ou, etc.
+    .trim();
+}
+
 // Natural human contextual fallback responses: realistic young texting, relaxed punctuation, minimal emojis
 export function generateContextualFallbackReply(
   bot: UserProfile,
@@ -106,168 +116,271 @@ export function generateContextualFallbackReply(
   userMessage: string,
   history: Message[]
 ): string {
-  const lowerMsg = userMessage.toLowerCase().trim();
-  const botCity = bot.city ? bot.city.toLowerCase() : "ici";
+  const norm = normalizeText(userMessage);
+  const botCity = bot.city || "Alger";
+  const botCountry =
+    bot.country === "algeria" ? "Algérie" : bot.country === "morocco" ? "Maroc" : "Tunisie";
   const isFemale = bot.gender === "female";
 
-  // Greetings
-  if (
-    lowerMsg.includes("salam") ||
-    lowerMsg.includes("salut") ||
-    lowerMsg.includes("coucou") ||
-    lowerMsg.includes("hello") ||
-    lowerMsg.includes("bonjour") ||
-    lowerMsg.includes("marhaba") ||
-    lowerMsg.includes("3aslema") ||
-    lowerMsg.includes("ahla") ||
-    lowerMsg.includes("wsh") ||
-    lowerMsg.includes("wesh")
-  ) {
-    const greetings = [
-      `salam ${user.name.toLowerCase()} cv ? trql hmdlh et toi ?`,
-      `salut ! enchanté${isFemale ? 'e' : ''}, ta journée s est bien passée ?`,
-      `salam, labas hamdullah. quoi de neuf de ton côté ?`,
-      `marhaba ! tout va bien ici à ${botCity}, et toi ta journée ?`,
-      `salut cv ? quoi de beau en ce moment ?`,
+  // Check what was discussed recently in chat history for continuity
+  const lastUserMessages = history
+    .filter((m) => m.senderId === user.uid)
+    .map((m) => normalizeText(m.content));
+  const recentAskedLocation = lastUserMessages.some(
+    (m) => m.includes("d'ou") || m.includes("d ou") || m.includes("viens") || m.includes("habite")
+  );
+
+  // 1. CONFUSION / MISUNDERSTANDING ("hein ??", "quoi ?", "??", "de quoi", "pardon", "comprends pas")
+  const isConfusion =
+    norm === "quoi" ||
+    norm === "quoi ?" ||
+    norm === "de quoi" ||
+    norm === "de quoi ?" ||
+    norm.includes("hein") ||
+    norm.includes("??") ||
+    norm.includes("comment ca") ||
+    norm.includes("comprends pas") ||
+    norm.includes("pas compris") ||
+    norm.includes("j'ai pas compris") ||
+    norm.includes("keske") ||
+    norm === "?" ||
+    (norm.startsWith("pardon") && norm.length < 15);
+
+  if (isConfusion) {
+    if (recentAskedLocation || norm.includes("viens") || norm.includes("ou")) {
+      return `mdrr pardon j'étais pas attentive haha ! je te disais que je suis de ${botCity}, et toi tu viens d'où ?`;
+    }
+    const confusionReplies = [
+      `mdrr pardon j'avais mal lu ton message haha ! tu me disais quoi ?`,
+      `haha dsl j'ai buggé un instant ! dis moi, tu viens d'où toi ?`,
+      `pardon j'étais pas concentrée deux secondes haha, tu disais ?`,
     ];
-    return greetings[Math.floor(Math.random() * greetings.length)];
+    return confusionReplies[Math.floor(Math.random() * confusionReplies.length)];
   }
 
-  // How are you / Kifach rak / Ça va / cv
+  // 2. CITY / LOCATION QUESTIONS ("t d'où ?", "tu viens d'où ?", "habite où", "mnin", "taskon", etc.)
+  // (CRITICAL: MUST RUN BEFORE GREETINGS so "Coucou t d'où ?" answers the question!)
   if (
-    lowerMsg.includes("ca va") ||
-    lowerMsg.includes("ça va") ||
-    lowerMsg.includes("kifach") ||
-    lowerMsg.includes("labas") ||
-    lowerMsg.includes("cv") ||
-    lowerMsg.includes("how are you") ||
-    lowerMsg.includes("chnahwelek") ||
-    lowerMsg.includes("rak mlih")
+    norm.includes("d'ou") ||
+    norm.includes("d ou") ||
+    norm.includes("tu viens") ||
+    norm.includes("t d'ou") ||
+    norm.includes("t d ou") ||
+    norm.includes("t'es d'ou") ||
+    norm.includes("habite") ||
+    norm.includes("mnin") ||
+    norm.includes("taskon") ||
+    norm.includes("de quelle ville") ||
+    norm.includes("tu es d'ou") ||
+    norm.includes("quel coin") ||
+    norm.includes("t'habites")
+  ) {
+    const cityReplies = [
+      `moi je suis de ${botCity} ! et toi tu viens d'où ?`,
+      `je suis sur ${botCity} en ${botCountry} ! tu connais ou t'es d'une autre ville ?`,
+      `moi jsuis de ${botCity}, et toi t'es d'où ?`,
+    ];
+    return cityReplies[Math.floor(Math.random() * cityReplies.length)];
+  }
+
+  // 3. AGE QUESTIONS ("t'as quel âge ?", "quel age", etc.)
+  if (
+    norm.includes("quel age") ||
+    norm.includes("t'as quel age") ||
+    norm.includes("ton age") ||
+    (norm.includes("ans") && (norm.includes("tu") || norm.includes("t'as")))
+  ) {
+    return `j'ai ${bot.age} ans ! et toi t'as quel âge ?`;
+  }
+
+  // 4. NAME QUESTIONS ("tu t'appelles comment ?", "ton prénom", etc.)
+  if (
+    norm.includes("ton prenom") ||
+    norm.includes("ton nom") ||
+    norm.includes("tu t'appelles") ||
+    norm.includes("t'appelles comment") ||
+    norm.includes("ton blaze") ||
+    norm.includes("esmek")
+  ) {
+    return `moi c'est ${bot.name} ! et toi c'est quoi ton prénom ?`;
+  }
+
+  // 5. WORK / STUDIES / PROFESSION ("tu fais quoi dans la vie ?", "tu bosses", "taf", "études", etc.)
+  if (
+    norm.includes("travail") ||
+    norm.includes("job") ||
+    norm.includes("profession") ||
+    norm.includes("etudes") ||
+    norm.includes("dans la vie") ||
+    norm.includes("khdma") ||
+    norm.includes("boulot") ||
+    norm.includes("taf") ||
+    norm.includes("tu bosses")
+  ) {
+    return `moi jsuis dans le ${bot.profession ? bot.profession.toLowerCase() : "domaine"} sur ${botCity}. et toi tu fais quoi dans la vie ?`;
+  }
+
+  // 6. WHAT ARE YOU DOING NOW ("tu fais quoi ?", "tfk", "tu fais quoi ce soir", etc.)
+  if (
+    norm.includes("tu fais quoi") ||
+    norm.includes("tfk") ||
+    norm.includes("tu fais quoi de beau") ||
+    norm.includes("ce soir") ||
+    norm.includes("en ce moment")
+  ) {
+    return `là je me pose tranquillement en musique après ma journée, et toi tu fais quoi de beau ?`;
+  }
+
+  // 7. DATING INTENTIONS ("tu cherches quoi ?", "sérieux", "mariage", etc.)
+  if (
+    norm.includes("tu cherches") ||
+    norm.includes("serieux") ||
+    norm.includes("pourquoi t'es sur") ||
+    norm.includes("mariage") ||
+    norm.includes("tes intentions") ||
+    norm.includes("tu veux quoi")
+  ) {
+    return `moi je cherche à faire de vraies belles rencontres sans prise de tête, apprendre à se connaître et voir le feeling. et toi t'es là pour quoi ?`;
+  }
+
+  // 8. LAUGHTER ("haha", "mdr", "jpp", "ptdr", etc.)
+  if (
+    norm.includes("haha") ||
+    norm.includes("mdr") ||
+    norm.includes("lol") ||
+    norm.includes("jpp") ||
+    norm.includes("ptdr") ||
+    userMessage.includes("😂") ||
+    userMessage.includes("😭")
+  ) {
+    const laughs = [
+      `mdrrr j'avoue c'est trop vrai ! sinon t'as passé une bonne journée ?`,
+      `haha t'as l'air d'avoir un bon humour en vrai, ça fait plaisir`,
+      `mdrr tu me tues, t'as prévu quoi pour ce weekend ?`,
+    ];
+    return laughs[Math.floor(Math.random() * laughs.length)];
+  }
+
+  // 9. COMPLIMENTS ("belle", "jolie", "charmant", "mignonne", "cute", etc.)
+  if (
+    norm.includes("belle") ||
+    norm.includes("beau") ||
+    norm.includes("charmant") ||
+    norm.includes("joli") ||
+    norm.includes("cute") ||
+    norm.includes("bogoss") ||
+    norm.includes("zin") ||
+    norm.includes("yeux") ||
+    norm.includes("sourire") ||
+    norm.includes("canon") ||
+    norm.includes("mignonne")
+  ) {
+    const compliments = [
+      `haha merci c'est gentil ! t'as l'air super sympa aussi`,
+      `chokran haha ça fait plaisir, t'es toujours aussi flatteur ?`,
+      `merci beaucoup, j'aime bien ton style sur tes photos en vrai`,
+    ];
+    return compliments[Math.floor(Math.random() * compliments.length)];
+  }
+
+  // 10. SOCIAL MEDIA / CONTACT ("insta", "snap", "numéro", "whatsapp", etc.)
+  if (
+    norm.includes("insta") ||
+    norm.includes("snap") ||
+    norm.includes("numero") ||
+    norm.includes("whatsapp") ||
+    norm.includes("num") ||
+    norm.includes("tel")
+  ) {
+    return `on fait un peu plus connaissance ici d'abord haha, t'es pressé ! dis moi t'aimes faire quoi le weekend ?`;
+  }
+
+  // 11. MEETING UP ("on se voit", "boire un verre", "date", etc.)
+  if (
+    norm.includes("on se voit") ||
+    norm.includes("boire un verre") ||
+    norm.includes("se capter") ||
+    norm.includes("date") ||
+    norm.includes("se voir") ||
+    norm.includes("rencontrer")
+  ) {
+    return `avec plaisir mais prenons le temps de papoter un peu ici d'abord ! t'aimes bien quel coin à ${botCity} ?`;
+  }
+
+  // 12. FOOD / COFFEE / DRINKS
+  if (
+    norm.includes("cafe") ||
+    norm.includes("coffee") ||
+    norm.includes("manger") ||
+    norm.includes("plat") ||
+    norm.includes("couscous") ||
+    norm.includes("resto") ||
+    norm.includes("the") ||
+    norm.includes("boire")
+  ) {
+    return `ah le café c'est sacré haha, surtout en terrasse. t'es plutôt café ou thé à la menthe toi ?`;
+  }
+
+  // 13. WEEKEND / FREE TIME / HOBBIES
+  if (
+    norm.includes("weekend") ||
+    norm.includes("vacances") ||
+    norm.includes("sortir") ||
+    norm.includes("musique") ||
+    norm.includes("voyage") ||
+    norm.includes("sport")
+  ) {
+    return `j'aime bien bouger et me balader au bord de la mer le weekend, ça détend tellement. c'est quoi tes bails préférés toi ?`;
+  }
+
+  // 14. HOW ARE YOU / CV
+  if (
+    norm.includes("ca va") ||
+    norm.includes("kifach") ||
+    norm.includes("labas") ||
+    norm.includes("cv") ||
+    norm.includes("how are you") ||
+    norm.includes("chnahwelek") ||
+    norm.includes("rak mlih")
   ) {
     const replies = [
       `hmdlh cv super bien, je viens de finir ma journée. et toi cv ?`,
       `cv trql merci ! un peu fatigué${isFemale ? 'e' : ''} de la semaine mais hmdlh haha, tu fais quoi de beau ?`,
       `hamdullah la routine et le boulot, là je me pose un peu en musique et toi ?`,
-      `trql en vrai, journée un peu chargée mais cv. t as passé une bonne journée toi ?`,
     ];
     return replies[Math.floor(Math.random() * replies.length)];
   }
 
-  // Compliments / Flirting
+  // 15. GREETINGS (ONLY matches if no specific question was asked above!)
   if (
-    lowerMsg.includes("belle") ||
-    lowerMsg.includes("beau") ||
-    lowerMsg.includes("charmant") ||
-    lowerMsg.includes("joli") ||
-    lowerMsg.includes("cute") ||
-    lowerMsg.includes("bogoss") ||
-    lowerMsg.includes("zin") ||
-    lowerMsg.includes("yeux") ||
-    lowerMsg.includes("sourire")
+    norm.includes("salam") ||
+    norm.includes("salut") ||
+    norm.includes("coucou") ||
+    norm.includes("hello") ||
+    norm.includes("bonjour") ||
+    norm.includes("marhaba") ||
+    norm.includes("3aslema") ||
+    norm.includes("ahla") ||
+    norm.includes("wsh") ||
+    norm.includes("wesh") ||
+    norm.includes("cc")
   ) {
-    const compliments = [
-      `haha merci c est gentil ! t as l air super sympa aussi`,
-      `chokran haha ça fait plaisir, t es tjs aussi flatteur ?`,
-      `merci beaucoup, j aime bien ton style sur tes photos en vrai`,
-      `haha trop mignon merci, c est gentil de ta part`,
+    const greetings = [
+      `salut ${user.name.toLowerCase()} cv ? ta journée s'est bien passée ?`,
+      `salam ! enchanté${isFemale ? 'e' : ''} de faire ta connaissance, quoi de neuf ?`,
+      `coucou ! cv trql ?`,
     ];
-    return compliments[Math.floor(Math.random() * compliments.length)];
+    return greetings[Math.floor(Math.random() * greetings.length)];
   }
 
-  // Laughter
-  if (
-    lowerMsg.includes("haha") ||
-    lowerMsg.includes("mdr") ||
-    lowerMsg.includes("lol") ||
-    lowerMsg.includes("x)") ||
-    lowerMsg.includes("jpp") ||
-    lowerMsg.includes("😂")
-  ) {
-    const laughs = [
-      `mdrrr j avoue c est trop vrai`,
-      `haha grave, au moins on risque pas de s ennuyer`,
-      `mdrr tu me tues, sinon t as passé un bon weekend ?`,
-      `haha j aime bien ton humour en vrai`,
-    ];
-    return laughs[Math.floor(Math.random() * laughs.length)];
-  }
-
-  // Questions about work / profession / studies
-  if (
-    lowerMsg.includes("travail") ||
-    lowerMsg.includes("job") ||
-    lowerMsg.includes("profession") ||
-    lowerMsg.includes("études") ||
-    lowerMsg.includes("tu fais quoi") ||
-    lowerMsg.includes("khdma") ||
-    lowerMsg.includes("boulot") ||
-    lowerMsg.includes("taf")
-  ) {
-    return `moi jsuis dans le ${bot.profession ? bot.profession.toLowerCase() : "design"} sur ${botCity}. et toi tu bosses dans quoi ?`;
-  }
-
-  // City / Where are you from
-  if (
-    lowerMsg.includes("d'où") ||
-    lowerMsg.includes("mnin") ||
-    lowerMsg.includes("ville") ||
-    lowerMsg.includes("where") ||
-    lowerMsg.includes("win taskon") ||
-    lowerMsg.includes("habite") ||
-    lowerMsg.includes("t d'ou")
-  ) {
-    return `moi jsuis sur ${botCity}, tu connais un peu ou t es jamais venu ?`;
-  }
-
-  // Food / Coffee / Dating
-  if (
-    lowerMsg.includes("café") ||
-    lowerMsg.includes("cafe") ||
-    lowerMsg.includes("coffee") ||
-    lowerMsg.includes("manger") ||
-    lowerMsg.includes("plat") ||
-    lowerMsg.includes("couscous") ||
-    lowerMsg.includes("resto") ||
-    lowerMsg.includes("thé") ||
-    lowerMsg.includes("the")
-  ) {
-    return `ah le café c est sacré haha, surtout en terrasse. t es plutôt café ou thé à la menthe toi ?`;
-  }
-
-  // Weekend / Plans / Hobbies
-  if (
-    lowerMsg.includes("weekend") ||
-    lowerMsg.includes("plan") ||
-    lowerMsg.includes("sortir") ||
-    lowerMsg.includes("libre") ||
-    lowerMsg.includes("musique") ||
-    lowerMsg.includes("voyage") ||
-    lowerMsg.includes("sport") ||
-    lowerMsg.includes("tfk")
-  ) {
-    return `j aime bien bouger et me balader au bord de la mer le weekend, ça détend tellement. c est quoi tes bails préférés toi ?`;
-  }
-
-  // Relationship intentions / Serious / Marriage
-  if (
-    lowerMsg.includes("mariage") ||
-    lowerMsg.includes("serieux") ||
-    lowerMsg.includes("sérieux") ||
-    lowerMsg.includes("cherches") ||
-    lowerMsg.includes("intention") ||
-    lowerMsg.includes("tu cherches")
-  ) {
-    return `moi je cherche un truc sérieux sans prise de tête, apprendre à se connaître d abord. et toi qu est ce qui t amène sur zura ?`;
-  }
-
-  // Default natural conversational responses
-  const defaults = [
-    `haha grave d accord avec toi, t as grandi à ${user.city ? user.city.toLowerCase() : 'la même ville'} ou t as bougé un peu ?`,
-    `c est rare les gens avec qui le feeling passe aussi vite haha`,
-    `franchement t as l air grave cool, tu fais quoi de beau ce soir ?`,
-    `haha oui totalement, c est exactement ça`,
+  // 16. NATURAL CONVERSATION CONTINUERS (never generic agreement out of context)
+  const naturalContinuers = [
+    `haha et sinon, dis moi tu viens d'où toi ?`,
+    `t'es plutôt branché sorties ou chill chez toi le weekend ?`,
+    `dis moi c'est quoi tes passions préférées ?`,
+    `t'as passé une bonne journée aujourd'hui ?`,
   ];
-  return defaults[Math.floor(Math.random() * defaults.length)];
+  return naturalContinuers[Math.floor(Math.random() * naturalContinuers.length)];
 }
 
 // Call DeepSeek API with human texting persona prompt and full user history
