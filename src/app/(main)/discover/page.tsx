@@ -156,10 +156,10 @@ export default function DiscoverPage() {
   const isCustomFiltered = selectedCountry !== 'all' || interestFilter !== 'all' || !!citySearch
 
   return (
-    <div className="fixed inset-0 md:static md:h-full w-full overflow-hidden overscroll-none touch-none flex flex-col items-center select-none bg-white">
+    <div className="relative h-full w-full overflow-hidden overscroll-none flex flex-col items-center select-none bg-white">
       
       {/* Clean Badoo Top Header (Part of the background, no bar effect) */}
-      <header className="w-full max-w-[430px] flex items-center justify-between px-4 pt-3.5 pb-2 shrink-0 z-20 bg-white touch-none select-none">
+      <header className="w-full max-w-[430px] flex items-center justify-between px-4 pt-3.5 pb-2 shrink-0 z-20 bg-white select-none">
         <h1 className="text-2xl sm:text-[28px] font-black text-[#1A1A2E] tracking-tight">
           Encounters
         </h1>

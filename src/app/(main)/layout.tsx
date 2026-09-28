@@ -76,7 +76,7 @@ export default function MainLayout({
   ]
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-white overflow-hidden select-none">
+    <div className={`flex ${isDiscover ? 'fixed inset-0' : 'h-[100dvh]'} flex-col bg-white overflow-hidden select-none overscroll-none`}>
       {/* Top Header (Hidden in chat rooms & discover) */}
       {!isChatRoom && !isDiscover && (
         <header className="flex h-14 items-center justify-between px-4 sm:px-6 md:hidden bg-white z-10 shrink-0">
