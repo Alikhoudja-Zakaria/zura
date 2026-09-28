@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💖 Zura (زورة) — Maghreb Dating & Friendship Web App
 
-## Getting Started
+**Zura** is a modern, culturally tailored dating and social connection web application designed specifically for the Maghreb (**Algeria 🇩🇿, Morocco 🇲🇦, and Tunisia 🇹🇳**).
 
-First, run the development server:
+Built with a fast, mobile-first experience inspired by Badoo, Tinder, and Hinge, featuring card swiping with deep profile prompts, zero gradients, crisp vector flags, client-side photo optimization, real-time messaging, and complete admin management controls.
 
+---
+
+## ✨ Features
+
+- **🇩🇿 🇲🇦 🇹🇳 Maghreb Country Selector & Wilayas**:
+  - Full support for all **58 Algerian Wilayas**, **12 Moroccan Regions**, and **24 Tunisian Governorates**.
+  - Crisp vector flag components that render consistently on all operating systems and browsers.
+- **🃏 Badoo / Hinge Hybrid Card Experience**:
+  - Interactive swipe cards (Framer Motion) with desktop keyboard navigation (← Pass, → Like).
+  - **Scroll inside the card**: Read personal cultural prompts, languages spoken, professions, and full-resolution second photos without outer page scrolling.
+  - Multi-photo progress bars with tap left/right photo switching.
+- **👩 👨 🤝 Flexible Connections**:
+  - Filter and meet: Women, Men, or Everyone.
+  - Choose intent: Serious Relationship, Casual Dating, or New Friends.
+- **📸 2 Mandatory Photos & Verification**:
+  - Client-side image compression directly to base64 for free-tier Firestore storage (no storage bucket required).
+  - Admin review queue before new profiles are publicly visible in the discovery feed.
+- **💬 Real-Time Chat & Icebreakers**:
+  - Real-time messages with Firestore snapshots.
+  - Cultural conversation starters (*"Salam! Kifach rak? 👋"*, *"What's your favorite spot in town? ☕"*).
+  - In-chat safety and user report modal.
+- **🛡️ Comprehensive Admin Dashboard**:
+  - Review queue: Approve or reject profiles with rejection reasons.
+  - Member management: Ban/unban controls and user inspection modal.
+  - Incident reports queue.
+  - 1-click Quick Login for Demo Admin and Demo User testing.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org/) (App Router, Turbopack)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **Backend / Database**: Firebase Firestore & Firebase Auth
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Alikhoudja-Zakaria/zura.git
+cd zura
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Seed demo profiles (Optional)
+```bash
+node scripts/seed.js
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Run the development server
+```bash
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 👥 Demo Access
+- **Admin**: Click the **🛡️ Demo Admin** button on the `/login` screen.
+- **Member**: Click the **👤 Demo User** button on the `/login` screen.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Made with ❤️ for the Maghreb.
