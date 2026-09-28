@@ -12,20 +12,24 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login, user, profile, loading, quickLogin } = useAuth();
+  const { login, user, profile, loading, quickLogin, logout } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && user && profile) {
-      if (profile.role === "admin") {
+  const handleDemoLogin = async (role: "admin" | "user") => {
+    setError("");
+    setIsLoading(true);
+    try {
+      await quickLogin(role);
+      if (role === "admin") {
         router.push("/admin");
-      } else if (profile.status === "pending" || profile.status === "rejected" || profile.status === "banned") {
-        router.push("/pending");
-      } else if (profile.status === "approved") {
+      } else {
         router.push("/discover");
       }
+    } catch (err: any) {
+      setError(err.message || "Failed to log in as demo account.");
+      setIsLoading(false);
     }
-  }, [user, profile, loading, router]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +38,15 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
+      // AuthContext will update user and profile, route to discover or admin
+      router.push("/discover");
     } catch (err: any) {
       setError(err.message || "Failed to log in. Please check your credentials.");
       setIsLoading(false);
     }
   };
 
-  if (loading || (user && profile)) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-[#FF4458]" />
@@ -51,6 +57,34 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#F5F5F5] flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+        {/* If user is already signed in, show status banner */}
+        {user && profile && (
+          <div className="mb-6 p-4 rounded-xl bg-rose-50/80 border border-rose-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Active Session</p>
+                <p className="text-sm font-bold text-[#1A1A2E]">{profile.name} <span className="font-normal text-xs text-gray-600">({profile.email})</span></p>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  await logout();
+                }}
+                className="text-xs font-bold text-[#FF4458] hover:underline px-2 py-1 rounded bg-white border border-rose-200"
+              >
+                Sign Out
+              </button>
+            </div>
+            <div className="mt-3">
+              <Link
+                href={profile.role === "admin" ? "/admin" : "/discover"}
+                className="block w-full py-2 px-3 text-center bg-[#FF4458] text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-colors"
+              >
+                Continue as {profile.name} ({profile.role === "admin" ? "Admin Panel" : "Discover"}) →
+              </Link>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 bg-[#F5F5F5] rounded-2xl flex items-center justify-center mb-4">
             <Heart className="w-8 h-8 text-[#FF4458]" fill="#FF4458" />
@@ -106,33 +140,17 @@ export default function LoginPage() {
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={async () => {
-                setIsLoading(true);
-                try {
-                  await quickLogin("admin");
-                } catch (e: any) {
-                  setError(e.message);
-                } finally {
-                  setIsLoading(false);
-                }
-              }}
-              className="py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-[#1A1A2E] rounded-xl text-xs font-bold transition-colors text-center border border-gray-200"
+              disabled={isLoading}
+              onClick={() => handleDemoLogin("admin")}
+              className="py-2.5 px-3 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold transition-colors text-center border border-gray-900 disabled:opacity-50"
             >
               🛡️ Demo Admin
             </button>
             <button
               type="button"
-              onClick={async () => {
-                setIsLoading(true);
-                try {
-                  await quickLogin("user");
-                } catch (e: any) {
-                  setError(e.message);
-                } finally {
-                  setIsLoading(false);
-                }
-              }}
-              className="py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-[#1A1A2E] rounded-xl text-xs font-bold transition-colors text-center border border-gray-200"
+              disabled={isLoading}
+              onClick={() => handleDemoLogin("user")}
+              className="py-2.5 px-3 bg-[#FF4458] hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-colors text-center border border-[#FF4458] disabled:opacity-50"
             >
               👤 Demo User (Amina)
             </button>

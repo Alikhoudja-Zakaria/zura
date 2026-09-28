@@ -1,11 +1,34 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Heart, Shield, MessageCircle, Users, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Heart, Shield, MessageCircle, Users, ChevronRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { CountryFlag } from "@/components/ui/CountryFlag";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LandingPage() {
+  const { user, profile, quickLogin, logout } = useAuth();
+  const router = useRouter();
+  const [demoLoading, setDemoLoading] = useState<"admin" | "user" | null>(null);
+
+  const handleQuickDemo = async (role: "admin" | "user") => {
+    setDemoLoading(role);
+    try {
+      await quickLogin(role);
+      if (role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/discover");
+      }
+    } catch (e) {
+      console.error("Demo login error:", e);
+    } finally {
+      setDemoLoading(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A2E] flex flex-col">
       <header className="flex items-center justify-between p-6 bg-white border-b border-gray-200">
@@ -13,21 +36,42 @@ export default function LandingPage() {
           <Heart className="w-8 h-8 text-[#FF4458]" fill="#FF4458" />
           <span className="text-2xl font-bold tracking-tight">Zura</span>
         </div>
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="font-semibold text-gray-600 hover:text-[#1A1A2E]">
-            Log in
-          </Link>
-          <Link 
-            href="/register" 
-            className="bg-[#FF4458] text-white px-5 py-2 rounded-xl font-semibold hover:bg-opacity-90 transition-colors"
-          >
-            Sign up
-          </Link>
+        <div className="flex items-center gap-3">
+          {user && profile ? (
+            <>
+              <Link
+                href={profile.role === "admin" ? "/admin" : "/discover"}
+                className="text-xs sm:text-sm font-bold text-[#FF4458] bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-100 transition-colors"
+              >
+                Go to App ({profile.name}) →
+              </Link>
+              <button
+                onClick={async () => {
+                  await logout();
+                }}
+                className="text-xs text-gray-500 hover:text-gray-900 font-semibold px-2 py-1"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="font-semibold text-gray-600 hover:text-[#1A1A2E]">
+                Log in
+              </Link>
+              <Link 
+                href="/register" 
+                className="bg-[#FF4458] text-white px-5 py-2 rounded-xl font-semibold hover:bg-opacity-90 transition-colors"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
       <main className="flex-1">
-        <section className="px-6 py-20 flex flex-col items-center text-center max-w-4xl mx-auto">
+        <section className="px-6 py-16 md:py-20 flex flex-col items-center text-center max-w-4xl mx-auto">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -39,7 +83,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-xl text-gray-600 mb-10 max-w-2xl"
+            className="text-xl text-gray-600 mb-8 max-w-2xl"
           >
             The premier dating app connecting hearts across Algeria, Morocco, and Tunisia. Clean, secure, and made for you.
           </motion.p>
@@ -48,7 +92,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-wrap justify-center gap-4 mb-12"
+            className="flex flex-wrap justify-center gap-4 mb-10"
           >
             <div className="flex items-center gap-2.5 bg-white px-5 py-3 rounded-2xl border border-gray-200 shadow-xs text-base font-semibold">
               <CountryFlag country="algeria" size="md" /> Algeria
@@ -65,13 +109,78 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center gap-4"
           >
             <Link 
               href="/register" 
-              className="inline-flex items-center gap-2 bg-[#FF4458] text-white px-8 py-4 rounded-xl text-xl font-bold hover:bg-opacity-90 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 bg-[#FF4458] text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-opacity-90 transition-colors shadow-sm"
             >
-              Get Started <ChevronRight className="w-6 h-6" />
+              Get Started <ChevronRight className="w-5 h-5" />
             </Link>
+            <Link 
+              href="/login" 
+              className="inline-flex items-center gap-2 bg-white text-gray-800 border border-gray-300 px-6 py-4 rounded-xl text-lg font-bold hover:bg-gray-50 transition-colors"
+            >
+              Log In
+            </Link>
+          </motion.div>
+
+          {/* Quick Demo & Instant Testing card */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="mt-10 w-full max-w-lg bg-white border border-gray-200 rounded-2xl p-5 shadow-xs text-left"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                ⚡ 1-Click Demo & Quick Testing
+              </span>
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                Ready to Test
+              </span>
+            </div>
+            <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+              Skip typing passwords and test the app immediately with preloaded sample profiles and admin moderation tools:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleQuickDemo("admin")}
+                disabled={!!demoLoading}
+                className="py-3 px-4 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2.5 border border-gray-900 disabled:opacity-50 text-left"
+              >
+                {demoLoading === "admin" ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <>
+                    <span className="text-base">🛡️</span>
+                    <div>
+                      <div className="font-bold">Demo Admin</div>
+                      <div className="text-[10px] text-gray-400 font-normal">Reviews, users & stats</div>
+                    </div>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickDemo("user")}
+                disabled={!!demoLoading}
+                className="py-3 px-4 bg-[#FF4458] hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2.5 border border-[#FF4458] disabled:opacity-50 text-left"
+              >
+                {demoLoading === "user" ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <>
+                    <span className="text-base">👤</span>
+                    <div>
+                      <div className="font-bold">Demo User (Amina)</div>
+                      <div className="text-[10px] text-rose-100 font-normal">Discover & chat in Algiers</div>
+                    </div>
+                  </>
+                )}
+              </button>
+            </div>
           </motion.div>
         </section>
 

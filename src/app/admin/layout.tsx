@@ -14,7 +14,7 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { userProfile, loading, logout } = useAuth();
+  const { userProfile, loading, logout, quickLogin } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -67,16 +67,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
         </nav>
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 space-y-2">
+          <button
+            type="button"
+            onClick={async () => {
+              await quickLogin('user');
+              router.push('/discover');
+            }}
+            className="flex items-center gap-2.5 px-4 py-2.5 w-full text-left rounded-xl bg-rose-50 hover:bg-rose-100 text-[#FF4458] text-xs font-bold transition-colors border border-rose-200"
+          >
+            <span>👤</span>
+            <span>Switch to Demo User (Amina)</span>
+          </button>
           <button
             onClick={async () => {
               await logout();
               router.push('/login');
             }}
-            className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl text-gray-600 hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-3 px-4 py-2.5 w-full text-left rounded-xl text-gray-600 hover:bg-gray-100 transition-colors text-xs font-semibold"
           >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Sign Out</span>
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
