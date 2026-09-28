@@ -69,14 +69,20 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
   const [activePhotoIdx, setActivePhotoIdx] = useState(0)
   const [hasSwiped, setHasSwiped] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const pointerStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   
   const x = useMotionValue(0)
   const controls = useAnimation()
   
   const rotate = useTransform(x, [-200, 200], [-10, 10])
   const opacity = useTransform(x, [-280, -180, 0, 180, 280], [0.4, 1, 1, 1, 0.4])
-  const likeOpacity = useTransform(x, [0, 80], [0, 1])
-  const nopeOpacity = useTransform(x, [-80, 0], [1, 0])
+
+  // Badoo Center Circular Badges (scaling & opacity driven by horizontal drag)
+  const likeOpacity = useTransform(x, [20, 80], [0, 1])
+  const likeScale = useTransform(x, [20, 100], [0.65, 1.1])
+
+  const nopeOpacity = useTransform(x, [-80, -20], [1, 0])
+  const nopeScale = useTransform(x, [-100, -20], [1.1, 0.65])
 
   const swipeThreshold = 80
   const photos = [profile.photo1, profile.photo2].filter(Boolean)
@@ -110,7 +116,7 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
     e.stopPropagation()
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
-        top: scrollRef.current.clientHeight * 0.85,
+        top: scrollRef.current.clientHeight * 0.88,
         behavior: 'smooth'
       })
     }
@@ -203,34 +209,38 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
         className="relative h-full w-full rounded-[28px] sm:rounded-[32px] bg-black shadow-[0_12px_40px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col select-none"
         style={{ x, rotate, opacity, touchAction: 'pan-y' }}
         drag="x"
+        dragDirectionLock={true}
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.65}
+        dragElastic={0.7}
+        dragMomentum={false}
         onDragEnd={handleDragEnd}
         animate={controls}
       >
-        {/* Like Stamp Overlay */}
+        {/* Badoo Giant Center Like Badge (Pure White Circle + Solid Black Heart) */}
         <motion.div
-          style={{ opacity: likeOpacity }}
-          className="absolute right-6 top-8 z-40 rounded-2xl border-4 border-emerald-500 bg-emerald-500/90 px-4 py-1.5 text-2xl font-black text-white rotate-12 shadow-xl pointer-events-none tracking-wider uppercase"
+          style={{ opacity: likeOpacity, scale: likeScale }}
+          className="absolute inset-0 m-auto w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white shadow-[0_16px_45px_rgba(0,0,0,0.4)] flex items-center justify-center pointer-events-none z-40"
         >
-          LIKE
+          <Heart size={54} className="fill-black stroke-black text-black" />
         </motion.div>
         
-        {/* Pass Stamp Overlay */}
+        {/* Badoo Giant Center Pass Badge (Pure White Circle + Solid Black X) */}
         <motion.div
-          style={{ opacity: nopeOpacity }}
-          className="absolute left-6 top-8 z-40 rounded-2xl border-4 border-rose-500 bg-rose-500/90 px-4 py-1.5 text-2xl font-black text-white -rotate-12 shadow-xl pointer-events-none tracking-wider uppercase"
+          style={{ opacity: nopeOpacity, scale: nopeScale }}
+          className="absolute inset-0 m-auto w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white shadow-[0_16px_45px_rgba(0,0,0,0.4)] flex items-center justify-center pointer-events-none z-40"
         >
-          PASS
+          <X size={54} strokeWidth={3.5} className="text-black" />
         </motion.div>
 
-        {/* Scrollable Container INSIDE the card (Natural touch & wheel scrolling to view bio/details) */}
+        {/* Scrollable Container INSIDE the card (Butter-smooth native momentum scrolling, no CSS smooth conflict) */}
         <div 
           ref={scrollRef}
-          className="h-full w-full overflow-y-auto overscroll-contain scroll-smooth touch-pan-y scrollbar-hide flex flex-col relative select-none"
-          style={{ WebkitOverflowScrolling: 'touch' }}
+          className="h-full w-full overflow-y-auto scrollbar-hide flex flex-col relative select-none"
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y'
+          }}
         >
-          
           {/* Main Hero Photo Viewport (100% of visible card height) */}
           <div className="relative w-full h-full min-h-full shrink-0 bg-black flex flex-col justify-between overflow-hidden">
             <img
@@ -247,22 +257,35 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
             {/* Bottom subtle vignette for contrast */}
             <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none z-10" />
 
-            {/* Upper Photo Tap Areas (Left/Right to switch photo - upper 55% only to allow smooth bottom touch scroll) */}
+            {/* Edge Photo Switchers (Non-blocking tap zones on outer edges so vertical touch scroll is 100% responsive) */}
             {photos.length > 1 && (
-              <div className="absolute top-0 inset-x-0 h-[55%] z-20 flex pointer-events-auto">
+              <div 
+                className="absolute top-0 inset-x-0 h-[60%] z-20 flex pointer-events-auto"
+                onPointerDown={(e) => {
+                  pointerStartRef.current = { x: e.clientX, y: e.clientY }
+                }}
+              >
                 <div 
                   className="w-1/2 h-full cursor-pointer"
                   onClick={(e) => {
-                    e.stopPropagation()
-                    setActivePhotoIdx(prev => (prev > 0 ? prev - 1 : prev))
+                    const dy = Math.abs(e.clientY - pointerStartRef.current.y)
+                    const dx = Math.abs(e.clientX - pointerStartRef.current.x)
+                    if (dy < 12 && dx < 12) {
+                      e.stopPropagation()
+                      setActivePhotoIdx(prev => (prev > 0 ? prev - 1 : prev))
+                    }
                   }}
                   title="Previous photo"
                 />
                 <div 
                   className="w-1/2 h-full cursor-pointer"
                   onClick={(e) => {
-                    e.stopPropagation()
-                    setActivePhotoIdx(prev => (prev < photos.length - 1 ? prev + 1 : prev))
+                    const dy = Math.abs(e.clientY - pointerStartRef.current.y)
+                    const dx = Math.abs(e.clientX - pointerStartRef.current.x)
+                    if (dy < 12 && dx < 12) {
+                      e.stopPropagation()
+                      setActivePhotoIdx(prev => (prev < photos.length - 1 ? prev + 1 : prev))
+                    }
                   }}
                   title="Next photo"
                 />
@@ -333,12 +356,12 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
               <MoreHorizontal size={22} className="text-white drop-shadow-md" />
             </button>
 
-            {/* Subtle Expand Indicator (Clean pill above the action buttons with breathing room) */}
+            {/* Subtle Profile Details Pill (Tap to scroll down) */}
             <div className="absolute bottom-24 inset-x-0 flex justify-center items-center z-25 pointer-events-auto">
               <button
                 type="button"
                 onClick={scrollToDetails}
-                className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-black/35 hover:bg-black/55 backdrop-blur-md text-[11px] font-semibold text-white/90 border border-white/15 shadow-sm active:scale-95 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-[11px] font-semibold text-white/95 border border-white/20 shadow-md active:scale-95 transition-all cursor-pointer"
               >
                 <span>Profile details</span>
                 <ChevronDown size={13} className="animate-bounce" />

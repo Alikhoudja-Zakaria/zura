@@ -40,14 +40,14 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-24">
-      {/* Header */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-10 border-b border-gray-100">
-        <Link href="/profile" className="p-2 -ml-2 text-gray-600 hover:text-[#1A1A2E] transition-colors">
-          <ArrowLeft className="w-6 h-6" />
+    <div className="min-h-screen bg-white pb-24">
+      {/* Seamless Badoo Top Header */}
+      <div className="bg-white px-4 pt-3.5 pb-2 flex items-center justify-between sticky top-0 z-10">
+        <Link href="/profile" className="p-2 -ml-2 text-[#1A1A2E] hover:bg-gray-100 rounded-full transition-colors">
+          <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-xl font-bold text-[#1A1A2E]">Settings</h1>
-        <div className="w-10"></div> {/* Spacer */}
+        <h1 className="text-2xl sm:text-[28px] font-black text-[#1A1A2E] tracking-tight">Settings</h1>
+        <div className="w-9"></div>
       </div>
 
       <div className="max-w-md mx-auto p-4 space-y-6">

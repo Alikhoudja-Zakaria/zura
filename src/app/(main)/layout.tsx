@@ -59,7 +59,7 @@ export default function MainLayout({
 
   if (loading || !user || !profile || profile.status !== 'approved') {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#FAFAFA]">
+      <div className="flex h-screen items-center justify-center bg-white">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#FF4458] border-t-transparent"></div>
       </div>
     )
@@ -76,10 +76,10 @@ export default function MainLayout({
   ]
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-[#FAFAFA] overflow-hidden select-none">
+    <div className="flex h-[100dvh] flex-col bg-white overflow-hidden select-none">
       {/* Top Header (Hidden in chat rooms & discover) */}
       {!isChatRoom && !isDiscover && (
-        <header className="flex h-14 items-center justify-between px-4 sm:px-6 md:hidden bg-white border-b border-gray-100 z-10 shrink-0">
+        <header className="flex h-14 items-center justify-between px-4 sm:px-6 md:hidden bg-white z-10 shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-2xl font-black tracking-tight text-[#FF385C]">ZURA</span>
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-[#FF385C] border border-rose-100 font-sans">

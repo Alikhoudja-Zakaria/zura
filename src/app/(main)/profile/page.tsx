@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Settings, Edit2, AlertCircle } from 'lucide-react';
+import { Settings, Edit2, AlertCircle, Heart, Users, Coffee, Check, Briefcase, Globe, MessageSquareQuote } from 'lucide-react';
 import { getCountryName } from '@/lib/utils';
 import { CountryFlag } from '@/components/ui/CountryFlag';
 
@@ -16,34 +16,38 @@ export default function ProfilePage() {
   const photos = [profile.photo1, profile.photo2].filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-24">
-      {/* Header */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-10 border-b border-gray-100">
-        <h1 className="text-xl font-bold text-[#1A1A2E]">Profile</h1>
-        <Link href="/settings" className="p-2 -mr-2 text-gray-400 hover:text-[#1A1A2E] transition-colors">
-          <Settings className="w-6 h-6" />
+    <div className="min-h-full bg-white pb-24">
+      {/* Seamless Badoo Top Header */}
+      <div className="px-4 pt-3.5 pb-2 flex items-center justify-between sticky top-0 z-10 bg-white">
+        <h1 className="text-2xl sm:text-[28px] font-black text-[#1A1A2E] tracking-tight">Profile</h1>
+        <Link 
+          href="/settings" 
+          className="p-2 -mr-1.5 text-black hover:bg-gray-100 rounded-full transition-colors"
+          title="Settings"
+        >
+          <Settings className="w-5 h-5" />
         </Link>
       </div>
 
-      <div className="max-w-md mx-auto p-4 space-y-6">
+      <div className="max-w-md mx-auto p-4 space-y-5">
         
-        {/* Account Status */}
+        {/* Account Status Notice */}
         {profile.status === 'pending' && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-sm font-semibold text-yellow-800">Account Under Review</h3>
-              <p className="text-xs text-yellow-700 mt-1">
-                Your profile is currently being reviewed by our team.
+              <h3 className="text-sm font-bold text-amber-900">Account Under Review</h3>
+              <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+                Your profile is being reviewed by our team to keep the Zura community safe and verified.
               </p>
             </div>
           </div>
         )}
 
-        {/* Profile Card */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+        {/* Profile Card (Styled matching Badoo Encounters) */}
+        <div className="bg-white rounded-[28px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden border border-gray-100">
           {/* Photos Carousel */}
-          <div className="w-full aspect-[3/4] relative bg-gray-100 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
+          <div className="w-full aspect-[3/4] relative bg-black flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
             {photos.map((photo, i) => (
               <div key={i} className="min-w-full h-full snap-center relative">
                 <img
@@ -53,75 +57,118 @@ export default function ProfilePage() {
                 />
               </div>
             ))}
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10">
-              {photos.map((_, i) => (
-                <div key={i} className={`h-1.5 rounded-full bg-white shadow-sm ${i === 0 ? 'w-4' : 'w-1.5 opacity-70'}`} />
-              ))}
-            </div>
-          </div>
 
-          <div className="p-5">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h2 className="text-2xl font-bold text-[#1A1A2E] flex items-center gap-2">
+            {/* Bottom vignette */}
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+
+            {/* Overlay Info inside Photo Frame */}
+            <div className="absolute bottom-4 left-4 right-4 z-10 text-white pointer-events-none">
+              <div className="flex items-center gap-1.5">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0088FF] text-white shadow-xs shrink-0">
+                  <Check size={12} strokeWidth={3.5} />
+                </span>
+                <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">
                   {profile.name}, {profile.age}
                 </h2>
-                <div className="text-gray-500 text-sm mt-1 flex items-center gap-2">
-                  <CountryFlag country={profile.country} size="xs" />
-                  <span>{profile.city}, {getCountryName(profile.country)}</span>
-                </div>
+              </div>
+
+              {/* Crisp White Pill Badge */}
+              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 text-[#1A1A2E] text-xs font-bold shadow-md">
+                {profile.lookingFor === 'serious' ? (
+                  <>
+                    <Heart size={12} className="fill-[#FF385C] text-[#FF385C]" />
+                    <span>Serious Relationship</span>
+                  </>
+                ) : profile.lookingFor === 'friends' ? (
+                  <>
+                    <Users size={12} className="text-[#0088FF]" />
+                    <span>New Friends</span>
+                  </>
+                ) : (
+                  <>
+                    <Coffee size={12} className="text-[#8C4A1E]" />
+                    <span>Here to date</span>
+                  </>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 text-white/95 text-xs font-semibold drop-shadow-sm mt-1.5">
+                <CountryFlag country={profile.country} size="xs" />
+                <span>{profile.city}, {getCountryName(profile.country)}</span>
               </div>
             </div>
 
-            <div className="mb-6">
-              <Link
-                href="/profile/edit"
-                className="w-full py-3 rounded-xl border-2 border-[#FF4458] text-[#FF4458] font-semibold flex items-center justify-center gap-2 hover:bg-[#FF4458]/5 transition-colors"
-              >
-                <Edit2 className="w-4 h-4" />
-                Edit Profile
-              </Link>
-            </div>
+            {/* Dot indicators */}
+            {photos.length > 1 && (
+              <div className="absolute top-4 right-4 flex gap-1 z-10">
+                {photos.map((_, i) => (
+                  <div key={i} className="h-1.5 w-4 rounded-full bg-white/80 shadow-xs" />
+                ))}
+              </div>
+            )}
+          </div>
 
-            <div className="space-y-6">
-              {profile.bio && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">About Me</h3>
-                  <p className="text-[#1A1A2E] leading-relaxed text-sm bg-gray-50 p-4 rounded-xl border border-gray-100">{profile.bio}</p>
+          <div className="p-5 space-y-5">
+            {/* Edit Profile Action */}
+            <Link
+              href="/profile/edit"
+              className="w-full py-3 rounded-full bg-black hover:bg-neutral-800 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
+            >
+              <Edit2 className="w-4 h-4" />
+              <span>Edit Profile & Photos</span>
+            </Link>
+
+            {/* Bio */}
+            {profile.bio && (
+              <div className="bg-[#FAF8F5] p-4 rounded-2xl border border-[#F0ECE6]">
+                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">About Me</h3>
+                <p className="text-[#1A1A2E] leading-relaxed text-sm">{profile.bio}</p>
+              </div>
+            )}
+
+            {/* Cultural Prompt */}
+            {profile.promptQuestion && profile.promptAnswer && (
+              <div className="bg-[#FFFBF5] border border-[#F5E6D3] p-4 rounded-2xl shadow-xs">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#8C4A1E] mb-1.5">
+                  <MessageSquareQuote size={16} className="text-[#D96B27]" />
+                  <span>{profile.promptQuestion}</span>
+                </div>
+                <p className="text-gray-800 text-sm font-medium leading-relaxed italic">
+                  "{profile.promptAnswer}"
+                </p>
+              </div>
+            )}
+
+            {/* Tags */}
+            <div className="flex flex-wrap gap-2">
+              {profile.profession && (
+                <div className="inline-flex items-center gap-1.5 rounded-xl bg-gray-50 border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-800">
+                  <Briefcase size={14} className="text-[#FF385C]" />
+                  <span>{profile.profession}</span>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Looking For</h3>
-                  <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-100 text-sm text-[#1A1A2E] font-medium">
-                    {profile.lookingFor === 'serious' ? '💝 Serious' : 
-                     profile.lookingFor === 'casual' ? '😊 Casual' : '🤝 Friends'}
-                  </div>
+              {profile.languages && profile.languages.length > 0 && (
+                <div className="inline-flex items-center gap-1.5 rounded-xl bg-gray-50 border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700">
+                  <Globe size={14} className="text-gray-500" />
+                  <span>{profile.languages.join(" • ")}</span>
                 </div>
+              )}
+            </div>
 
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Wants to Meet</h3>
-                  <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-100 text-sm text-[#1A1A2E] font-medium">
-                    {profile.interestedIn === 'women' ? '👩 Women' :
-                     profile.interestedIn === 'men' ? '👨 Men' : '✨ Everyone'}
-                  </div>
+            {/* Interests */}
+            {profile.interests && profile.interests.length > 0 && (
+              <div>
+                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Interests</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {profile.interests.map((interest: string, i: number) => (
+                    <span key={i} className="px-3 py-1 rounded-lg bg-gray-50 border border-gray-200 text-xs font-medium text-gray-800">
+                      {interest}
+                    </span>
+                  ))}
                 </div>
               </div>
-
-              {profile.interests && profile.interests.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Interests</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.interests.map((interest: string, i: number) => (
-                      <span key={i} className="px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-sm text-[#1A1A2E]">
-                        {interest}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>

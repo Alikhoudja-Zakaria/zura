@@ -8,7 +8,7 @@ import { Message, Match, UserProfile } from '@/types'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import ReportModal from '@/components/ui/ReportModal'
 import { CountryFlag } from '@/components/ui/CountryFlag'
-import { ArrowLeft, Send, Flag, Sparkles } from 'lucide-react'
+import { ArrowLeft, Send, Flag, Sparkles, Check } from 'lucide-react'
 
 export default function ChatPage() {
   const params = useParams()
@@ -71,14 +71,14 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen bg-[#FAFAFA]">
-        <div className="h-16 bg-white border-b flex items-center px-4 animate-pulse">
-          <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-          <div className="ml-3 w-32 h-4 bg-gray-200 rounded"></div>
+      <div className="flex flex-col h-screen bg-white">
+        <div className="h-16 bg-white flex items-center px-4 animate-pulse">
+          <div className="w-9 h-9 bg-gray-100 rounded-full"></div>
+          <div className="ml-3 w-32 h-4 bg-gray-100 rounded"></div>
         </div>
         <div className="flex-1 p-4 space-y-4">
-          <div className="w-2/3 h-10 bg-gray-200 rounded-2xl rounded-bl-sm"></div>
-          <div className="w-1/2 h-10 bg-gray-200 rounded-2xl rounded-br-sm self-end ml-auto"></div>
+          <div className="w-2/3 h-10 bg-gray-100 rounded-2xl rounded-bl-sm"></div>
+          <div className="w-1/2 h-10 bg-gray-100 rounded-2xl rounded-br-sm self-end ml-auto"></div>
         </div>
       </div>
     )
@@ -86,11 +86,11 @@ export default function ChatPage() {
 
   if (!match || !user) {
     return (
-      <div className="p-8 text-center flex flex-col items-center justify-center min-h-[50vh]">
+      <div className="p-8 text-center flex flex-col items-center justify-center min-h-[50vh] bg-white">
         <p className="text-gray-500 mb-4">Chat not found</p>
         <button
           onClick={() => router.push('/matches')}
-          className="px-4 py-2 bg-[#FF4458] text-white rounded-xl text-sm font-semibold"
+          className="px-5 py-2.5 bg-black text-white rounded-full text-xs font-bold shadow-md cursor-pointer"
         >
           Back to Matches
         </button>
@@ -99,36 +99,40 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#FAFAFA] max-w-5xl mx-auto border-x border-gray-100">
-      {/* Header */}
-      <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 flex-shrink-0 z-10">
-        <div className="flex items-center gap-3">
+    <div className="flex flex-col h-[100dvh] bg-white max-w-5xl mx-auto">
+      {/* Seamless Badoo Header (Part of the background) */}
+      <header className="h-16 bg-white flex items-center justify-between px-4 flex-shrink-0 z-10">
+        <div className="flex items-center gap-2.5">
           <button 
             onClick={() => router.push('/matches')}
-            className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors"
+            className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+            title="Back to Matches"
           >
-            <ArrowLeft className="w-6 h-6 text-[#1A1A2E]" />
+            <ArrowLeft className="w-5 h-5 text-[#1A1A2E]" />
           </button>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+              <div className="w-10 h-10 rounded-full bg-black overflow-hidden shadow-xs">
                 {otherUser?.photo1 && (
                   <img src={otherUser.photo1} alt={otherUser.name} className="w-full h-full object-cover" />
                 )}
               </div>
               {otherUser?.online && (
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></div>
               )}
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h2 className="font-bold text-[#1A1A2E] leading-tight">{otherUser?.name || "Match"}</h2>
+                <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-[#0088FF] text-white shrink-0">
+                  <Check size={8} strokeWidth={3.5} />
+                </span>
+                <h2 className="font-black text-[#1A1A2E] text-base leading-tight">{otherUser?.name || "Match"}</h2>
                 {otherUser?.country && (
                   <CountryFlag country={otherUser.country} size="xs" />
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-0.5">{otherUser?.online ? 'Online' : 'Offline'}</p>
+              <p className="text-[11px] text-gray-400 font-medium">{otherUser?.online ? 'Online now' : (otherUser?.city || 'Algeria')}</p>
             </div>
           </div>
         </div>
@@ -136,23 +140,23 @@ export default function ChatPage() {
         {otherUser && (
           <button
             onClick={() => setShowReport(true)}
-            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
+            className="p-2 text-gray-400 hover:text-red-500 hover:bg-gray-50 rounded-full transition-colors cursor-pointer"
             title={`Report ${otherUser.name}`}
           >
-            <Flag className="w-5 h-5" />
+            <Flag className="w-4 h-4" />
           </button>
         )}
       </header>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col bg-[#FAFAFA] rounded-t-[28px]">
         {messages.length === 0 ? (
           <div className="m-auto text-center p-6 max-w-sm">
-            <div className="w-16 h-16 rounded-full bg-[#FF4458]/10 text-[#FF4458] flex items-center justify-center mx-auto mb-3">
-              <Sparkles className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-full bg-rose-50 text-[#FF385C] flex items-center justify-center mx-auto mb-3 border border-rose-100">
+              <Sparkles className="w-7 h-7" />
             </div>
-            <h3 className="font-bold text-[#1A1A2E] text-base mb-1">It's a new match!</h3>
-            <p className="text-gray-400 text-xs mb-4">Break the ice and start the conversation:</p>
+            <h3 className="font-black text-[#1A1A2E] text-lg mb-1 tracking-tight">It's a Match!</h3>
+            <p className="text-gray-400 text-xs mb-4">Break the ice and start talking:</p>
             
             <div className="flex flex-col gap-2">
               {[
@@ -165,7 +169,7 @@ export default function ChatPage() {
                   key={i}
                   type="button"
                   onClick={() => setNewMessage(starter)}
-                  className="px-3.5 py-2 bg-white border border-gray-200 hover:border-[#FF4458] hover:bg-[#FF4458]/5 text-[#1A1A2E] rounded-xl text-xs font-medium transition-all text-left shadow-xs"
+                  className="px-4 py-2.5 bg-white border border-gray-200/80 hover:border-black text-[#1A1A2E] rounded-2xl text-xs font-semibold transition-all text-left shadow-xs cursor-pointer active:scale-98"
                 >
                   {starter}
                 </button>
@@ -185,21 +189,21 @@ export default function ChatPage() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-white border-t border-gray-100 p-4 flex-shrink-0">
+      <div className="bg-white p-3.5 flex-shrink-0 border-t border-gray-100">
         <form onSubmit={handleSend} className="flex gap-2">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[#1A1A2E] focus:outline-none focus:ring-2 focus:ring-[#FF4458]/20 focus:border-[#FF4458]"
+            className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-4 py-2.5 text-xs text-[#1A1A2E] focus:outline-none focus:border-black"
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="bg-[#FF4458] text-white px-5 rounded-xl hover:bg-[#FF4458]/90 disabled:opacity-50 transition-colors flex items-center justify-center shadow-sm"
+            className="w-10 h-10 rounded-full bg-black text-white hover:bg-neutral-800 disabled:opacity-40 transition-all flex items-center justify-center shadow-xs cursor-pointer active:scale-95 shrink-0"
           >
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4" />
           </button>
         </form>
       </div>

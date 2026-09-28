@@ -88,14 +88,14 @@ export default function EditProfilePage() {
   const photos = [photo1, photo2];
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-24">
-      {/* Header */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-10 border-b border-gray-100">
-        <Link href="/profile" className="p-2 -ml-2 text-gray-600 hover:text-[#1A1A2E] transition-colors">
-          <ArrowLeft className="w-6 h-6" />
+    <div className="min-h-screen bg-white pb-24">
+      {/* Seamless Badoo Top Header */}
+      <div className="bg-white px-4 pt-3.5 pb-2 flex items-center justify-between sticky top-0 z-10">
+        <Link href="/profile" className="p-2 -ml-2 text-[#1A1A2E] hover:bg-gray-100 rounded-full transition-colors">
+          <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-xl font-bold text-[#1A1A2E]">Edit Profile</h1>
-        <div className="w-10"></div>
+        <h1 className="text-2xl sm:text-[28px] font-black text-[#1A1A2E] tracking-tight">Edit Profile</h1>
+        <div className="w-9"></div>
       </div>
 
       <div className="max-w-md mx-auto p-4 space-y-6">
@@ -260,12 +260,12 @@ export default function EditProfilePage() {
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full py-4 bg-[#FF4458] text-white rounded-xl font-bold text-lg hover:bg-[#ff3045] transition-colors disabled:opacity-70 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+          className="w-full py-3.5 bg-black hover:bg-neutral-800 text-white rounded-full font-bold text-sm transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95"
         >
           {isSaving ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Saving...
+              Saving Profile...
             </>
           ) : (
             'Save Profile'
