@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { getApprovedUsers, getSwipedUserIds, createSwipe, checkMutualLike, createMatch } from '@/lib/firestore'
+import { isBotProfile, handleBotSwipeMatching } from '@/lib/botEngine'
 import { UserProfile, Country } from '@/types'
 import ProfileCard from '@/components/cards/ProfileCard'
 import MatchModal from '@/components/cards/MatchModal'
@@ -95,6 +96,13 @@ export default function DiscoverPage() {
         if (isMutual) {
           await createMatch(user.uid, targetUserId)
           setMatchData({ user1: profile, user2: targetProfile })
+        } else if (isBotProfile(targetProfile)) {
+          // Autonomous bot matching logic:
+          // Match probability + realistic variable time delay (15-45s)
+          handleBotSwipeMatching(profile, targetProfile, undefined, () => {
+            // Celebrate delayed match if user is still discovering
+            setMatchData({ user1: profile, user2: targetProfile })
+          })
         }
       }
     } catch (error) {

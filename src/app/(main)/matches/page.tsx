@@ -15,8 +15,9 @@ export default function MatchesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function loadData() {
+    async function loadData(showLoading = false) {
       if (!user) return
+      if (showLoading) setLoading(true)
       try {
         const [matchData, likers] = await Promise.all([
           getUserMatches(user.uid),
@@ -27,10 +28,16 @@ export default function MatchesPage() {
       } catch (error) {
         console.error("Failed to load matches and likes:", error)
       } finally {
-        setLoading(false)
+        if (showLoading) setLoading(false)
       }
     }
-    loadData()
+    loadData(true)
+
+    // Periodic sync so delayed bot matches appear live without page reload
+    const interval = setInterval(() => {
+      loadData(false)
+    }, 6000)
+    return () => clearInterval(interval)
   }, [user])
 
   function getOtherUser(match: Match): UserProfile | undefined {

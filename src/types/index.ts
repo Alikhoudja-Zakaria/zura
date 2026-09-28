@@ -36,6 +36,7 @@ export interface UserProfile {
   role: UserRole;
   rejectionReason?: string;
   online: boolean;
+  isBot?: boolean;
   lastSeen: number; // timestamp
   createdAt: number; // timestamp
   updatedAt: number; // timestamp

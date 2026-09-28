@@ -7,8 +7,10 @@ import { UserProfile, Country } from '@/types'
 import { CountryFlag } from '@/components/ui/CountryFlag'
 import { 
   Sparkles, Users, Trash2, CheckCircle2, 
-  Loader2, RefreshCw, AlertCircle, Eye, ArrowRight 
+  Loader2, RefreshCw, AlertCircle, Eye, ArrowRight,
+  Bot, Cpu, Sliders, ShieldCheck, Zap
 } from 'lucide-react'
+import { BotConfig, getBotConfig, saveBotConfig } from '@/lib/botEngine'
 import Link from 'next/link'
 
 export default function AdminGeneratorPage() {
@@ -24,6 +26,16 @@ export default function AdminGeneratorPage() {
   const [totalUsers, setTotalUsers] = useState<number>(0)
   const [fakeCount, setFakeCount] = useState<number>(0)
 
+  // Bot Engine Configuration State
+  const [botConfig, setBotConfig] = useState<BotConfig>(getBotConfig())
+  const [configMsg, setConfigMsg] = useState('')
+
+  const handleSaveConfig = () => {
+    saveBotConfig(botConfig)
+    setConfigMsg('Bot engine settings saved successfully!')
+    setTimeout(() => setConfigMsg(''), 4000)
+  }
+
   const loadStats = async () => {
     try {
       const all = await getAllUsers()
@@ -37,6 +49,7 @@ export default function AdminGeneratorPage() {
 
   useEffect(() => {
     loadStats()
+    setBotConfig(getBotConfig())
   }, [])
 
   const handleGenerate = async () => {
@@ -313,6 +326,178 @@ export default function AdminGeneratorPage() {
               <span>Purge All Generated Profiles ({fakeCount})</span>
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Autonomous Bot & DeepSeek LLM Engine Configuration */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-violet-50 text-violet-600">
+              <Bot size={22} />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-[#1A1A2E]">
+                Autonomous Bot & DeepSeek LLM Engine
+              </h2>
+              <p className="text-gray-500 text-xs mt-0.5">
+                Configure matching probabilities, realistic variable delays, and conversational LLM engine.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 self-start sm:self-center px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+            <ShieldCheck size={14} />
+            <span>Autonomous Engine Active</span>
+          </div>
+        </div>
+
+        {configMsg && (
+          <div className="p-3 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-200 flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+            <span>{configMsg}</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* DeepSeek API Key */}
+          <div className="space-y-1.5 md:col-span-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-gray-700">DeepSeek API Key</label>
+              <button
+                type="button"
+                onClick={() => setBotConfig(prev => ({ ...prev, deepseekApiKey: "e961fc82-e18b-4009-bdf3-87c9c3b09437" }))}
+                className="text-[11px] font-semibold text-violet-600 hover:underline cursor-pointer"
+              >
+                Reset to Provided Key
+              </button>
+            </div>
+            <input
+              type="text"
+              value={botConfig.deepseekApiKey || ''}
+              onChange={(e) => setBotConfig(prev => ({ ...prev, deepseekApiKey: e.target.value }))}
+              placeholder="e961fc82-e18b-4009-bdf3-87c9c3b09437"
+              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-800 focus:outline-none focus:border-violet-500"
+            />
+            <p className="text-[11px] text-gray-400">
+              Routes incoming messages through DeepSeek LLM with persistent Maghreb persona, city context, and chat history.
+            </p>
+          </div>
+
+          {/* Match Probability */}
+          <div className="space-y-2 p-4 bg-gray-50 rounded-xl border border-gray-200/80">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-gray-700">Match Probability</label>
+              <span className="text-xs font-black text-violet-600">
+                {Math.round(botConfig.matchProbability * 100)}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.1"
+              max="1.0"
+              step="0.05"
+              value={botConfig.matchProbability}
+              onChange={(e) => setBotConfig(prev => ({ ...prev, matchProbability: parseFloat(e.target.value) }))}
+              className="w-full accent-violet-600 cursor-pointer"
+            />
+            <p className="text-[11px] text-gray-500 leading-relaxed">
+              Likelihood that a bot swipes right back when a real user likes them.
+            </p>
+          </div>
+
+          {/* Auto Icebreaker */}
+          <div className="space-y-2 p-4 bg-gray-50 rounded-xl border border-gray-200/80 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-gray-700">Auto Icebreaker</label>
+              <input
+                type="checkbox"
+                checked={botConfig.autoIcebreaker}
+                onChange={(e) => setBotConfig(prev => ({ ...prev, autoIcebreaker: e.target.checked }))}
+                className="w-4 h-4 rounded text-violet-600 accent-violet-600 cursor-pointer"
+              />
+            </div>
+            <p className="text-[11px] text-gray-500 leading-relaxed">
+              Bot automatically initiates conversation with a culturally tailored opening message (Darija / French) shortly after matching.
+            </p>
+          </div>
+
+          {/* Match Delay Range */}
+          <div className="space-y-2 p-4 bg-gray-50 rounded-xl border border-gray-200/80">
+            <label className="text-xs font-bold text-gray-700 block">Match Time Delay (Seconds)</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-[10px] text-gray-400 font-bold block mb-1">MIN DELAY</span>
+                <input
+                  type="number"
+                  min="2"
+                  max="300"
+                  value={botConfig.minMatchDelaySec}
+                  onChange={(e) => setBotConfig(prev => ({ ...prev, minMatchDelaySec: parseInt(e.target.value) || 5 }))}
+                  className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-800"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] text-gray-400 font-bold block mb-1">MAX DELAY</span>
+                <input
+                  type="number"
+                  min="5"
+                  max="600"
+                  value={botConfig.maxMatchDelaySec}
+                  onChange={(e) => setBotConfig(prev => ({ ...prev, maxMatchDelaySec: parseInt(e.target.value) || 30 }))}
+                  className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-800"
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-500">
+              Avoids instant matching: selects a realistic randomized delay between {botConfig.minMatchDelaySec}s and {botConfig.maxMatchDelaySec}s.
+            </p>
+          </div>
+
+          {/* Typing Delay Range */}
+          <div className="space-y-2 p-4 bg-gray-50 rounded-xl border border-gray-200/80">
+            <label className="text-xs font-bold text-gray-700 block">Chat Typing Delay (Seconds)</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-[10px] text-gray-400 font-bold block mb-1">MIN TYPING</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="1"
+                  max="10"
+                  value={botConfig.minTypingDelaySec}
+                  onChange={(e) => setBotConfig(prev => ({ ...prev, minTypingDelaySec: parseFloat(e.target.value) || 1.5 }))}
+                  className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-800"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] text-gray-400 font-bold block mb-1">MAX TYPING</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="2"
+                  max="15"
+                  value={botConfig.maxTypingDelaySec}
+                  onChange={(e) => setBotConfig(prev => ({ ...prev, maxTypingDelaySec: parseFloat(e.target.value) || 4 }))}
+                  className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-800"
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-500">
+              Realistic typing bubble duration before dispatching message ({botConfig.minTypingDelaySec}s - {botConfig.maxTypingDelaySec}s).
+            </p>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <button
+            type="button"
+            onClick={handleSaveConfig}
+            className="px-5 py-2.5 bg-[#1A1A2E] hover:bg-black text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-98"
+          >
+            <CheckCircle2 size={15} />
+            <span>Save Bot Configuration</span>
+          </button>
         </div>
       </div>
 

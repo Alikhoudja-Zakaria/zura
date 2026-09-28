@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { subscribeToMessages, sendMessage, getMatchById, getUserProfile, markMessagesAsRead } from '@/lib/firestore'
+import { isBotProfile } from '@/lib/botEngine'
 import { Message, Match, UserProfile } from '@/types'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import ReportModal from '@/components/ui/ReportModal'
@@ -22,6 +23,7 @@ export default function ChatPage() {
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [showReport, setShowReport] = useState(false)
+  const [isBotTyping, setIsBotTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, isBotTyping])
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,6 +69,23 @@ export default function ChatPage() {
     setNewMessage('')
     try {
       await sendMessage(matchId, user.uid, content)
+
+      // Autonomous Bot Response Routing
+      if (otherUser && isBotProfile(otherUser)) {
+        setIsBotTyping(true)
+        fetch('/api/bot/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            matchId,
+            userUid: user.uid,
+            botUid: otherUser.uid,
+            messageContent: content,
+          }),
+        })
+          .catch((err) => console.error("Bot chat response error:", err))
+          .finally(() => setIsBotTyping(false))
+      }
     } catch (error) {
       console.error("Failed to send message:", error)
     }
@@ -135,7 +154,15 @@ export default function ChatPage() {
                   <CountryFlag country={otherUser.country} size="xs" />
                 )}
               </div>
-              <p className="text-[11px] text-gray-400 font-medium">{otherUser?.online ? 'Online now' : (otherUser?.city || 'Algeria')}</p>
+              <p className="text-[11px] text-gray-400 font-medium">
+                {isBotTyping ? (
+                  <span className="text-emerald-600 font-semibold animate-pulse">typing...</span>
+                ) : otherUser?.online ? (
+                  'Online now'
+                ) : (
+                  otherUser?.city || 'Algeria'
+                )}
+              </p>
             </div>
           </div>
         </div>
@@ -188,6 +215,23 @@ export default function ChatPage() {
             />
           ))
         )}
+
+        {/* Realistic Human Typing Indicator */}
+        {isBotTyping && (
+          <div className="flex items-center gap-2 mb-3 max-w-[75%] self-start animate-fade-in">
+            {otherUser?.photo1 && (
+              <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 border border-gray-200">
+                <img src={otherUser.photo1} alt={otherUser.name} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="bg-white border border-gray-200/80 px-4 py-2.5 rounded-2xl rounded-bl-sm shadow-xs flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 

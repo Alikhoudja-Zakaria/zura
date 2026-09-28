@@ -235,6 +235,7 @@ export async function generateFakeProfiles(options: GeneratorOptions): Promise<U
       status,
       role: "user",
       online: Math.random() > 0.4,
+      isBot: true,
       lastSeen: now - Math.floor(Math.random() * 86400000),
       createdAt: now - Math.floor(Math.random() * 86400000 * 7),
       updatedAt: now,
