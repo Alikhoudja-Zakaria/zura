@@ -156,10 +156,10 @@ export default function DiscoverPage() {
   const isCustomFiltered = selectedCountry !== 'all' || interestFilter !== 'all' || !!citySearch
 
   return (
-    <div className="relative h-full w-full overflow-hidden flex flex-col items-center select-none bg-white">
+    <div className="fixed inset-0 md:static md:h-full w-full overflow-hidden overscroll-none touch-none flex flex-col items-center select-none bg-white">
       
       {/* Clean Badoo Top Header (Part of the background, no bar effect) */}
-      <header className="w-full max-w-[430px] flex items-center justify-between px-4 pt-3.5 pb-2 shrink-0 z-30 bg-white">
+      <header className="w-full max-w-[430px] flex items-center justify-between px-4 pt-3.5 pb-2 shrink-0 z-20 bg-white touch-none select-none">
         <h1 className="text-2xl sm:text-[28px] font-black text-[#1A1A2E] tracking-tight">
           Encounters
         </h1>
@@ -195,15 +195,15 @@ export default function DiscoverPage() {
         </div>
       </header>
 
-      {/* Main Card Deck Area (Card takes remaining height, no page scrolling) */}
-      <div className="flex-1 min-h-0 w-full max-w-[430px] flex items-center justify-center relative px-2.5 pb-2.5 sm:px-3 sm:pb-3">
+      {/* Main Card Deck Area (overflow-visible so card sweeps OVER header without clipping) */}
+      <div className="flex-1 min-h-0 w-full max-w-[430px] flex items-center justify-center relative px-2.5 pb-2.5 sm:px-3 sm:pb-3 overflow-visible touch-none">
         {loading ? (
           <div className="h-full w-full rounded-[28px] sm:rounded-[32px] bg-gray-900 border border-gray-800 shadow-xl animate-pulse flex flex-col justify-between p-6">
             <div className="h-8 w-44 bg-gray-800 rounded-lg mt-4"></div>
             <div className="h-16 w-64 mx-auto bg-gray-800 rounded-full mb-6"></div>
           </div>
         ) : filteredProfiles.length > 0 ? (
-          <div className="relative w-full h-full">
+          <div className="relative w-full h-full overflow-visible">
             {/* Background Card (ALREADY LOADED BEHIND in DOM) */}
             {filteredProfiles.length > 1 && (
               <ProfileCard

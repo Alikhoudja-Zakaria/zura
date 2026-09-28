@@ -135,7 +135,7 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
   // Preloaded background card waiting behind the active card in the DOM
   if (!active) {
     return (
-      <div className="absolute inset-0 z-0 flex flex-col items-center pointer-events-none select-none overflow-hidden">
+      <div className="absolute inset-0 z-10 flex flex-col items-center pointer-events-none select-none overflow-visible">
         <div className="relative h-full w-full rounded-[28px] sm:rounded-[32px] bg-black shadow-lg overflow-hidden scale-[0.98] translate-y-1.5 opacity-95 transition-transform duration-300">
           <img
             src={profile.photo1 || 'https://via.placeholder.com/400x533?text=No+Photo'}
@@ -204,9 +204,9 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
   }
 
   return (
-    <div className="absolute inset-0 z-10 flex flex-col items-center select-none overflow-hidden">
+    <div className="absolute inset-0 z-40 flex flex-col items-center select-none overflow-visible pointer-events-none">
       <motion.div
-        className="relative h-full w-full rounded-[28px] sm:rounded-[32px] bg-black shadow-[0_12px_40px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col select-none"
+        className="relative h-full w-full rounded-[28px] sm:rounded-[32px] bg-black shadow-[0_12px_40px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col select-none pointer-events-auto"
         style={{ x, rotate, opacity, touchAction: 'pan-y' }}
         drag="x"
         dragDirectionLock={true}
