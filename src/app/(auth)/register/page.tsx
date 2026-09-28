@@ -540,18 +540,27 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Fast verification guarantee */}
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 flex items-center gap-3 text-left">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-black font-black shrink-0 text-sm shadow-xs">⚡</span>
+              <div>
+                <p className="text-xs font-black text-amber-950">Fast Verification</p>
+                <p className="text-[11px] text-amber-800 font-medium">Profiles are usually reviewed and approved in 15 seconds to 30 minutes!</p>
+              </div>
+            </div>
+
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full bg-[#FF4458] text-white font-bold py-4 rounded-xl hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-2"
+              className="w-full bg-black hover:bg-neutral-800 text-white font-bold py-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all text-sm"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-6 h-6 animate-spin" /> Processing...
+                  <Loader2 className="w-5 h-5 animate-spin" /> Submitting Profile...
                 </>
               ) : (
                 <>
-                  <Check className="w-6 h-6" /> Submit Profile
+                  <Check className="w-5 h-5" /> Submit Profile for Review
                 </>
               )}
             </button>

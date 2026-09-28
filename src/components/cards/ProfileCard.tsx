@@ -77,25 +77,34 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
   const rotate = useTransform(x, [-200, 200], [-10, 10])
   const opacity = useTransform(x, [-280, -180, 0, 180, 280], [0.4, 1, 1, 1, 0.4])
 
-  // Badoo Center Circular Badges (scaling & opacity driven by horizontal drag)
-  const likeOpacity = useTransform(x, [20, 80], [0, 1])
-  const likeScale = useTransform(x, [20, 100], [0.65, 1.1])
+  // Badoo Center Circular Badges (scaling & opacity smoothly over deliberate drag distance)
+  const likeOpacity = useTransform(x, [30, 120], [0, 1])
+  const likeScale = useTransform(x, [30, 140], [0.6, 1.1])
 
-  const nopeOpacity = useTransform(x, [-80, -20], [1, 0])
-  const nopeScale = useTransform(x, [-100, -20], [1.1, 0.65])
+  const nopeOpacity = useTransform(x, [-120, -30], [1, 0])
+  const nopeScale = useTransform(x, [-140, -30], [1.1, 0.6])
 
-  const swipeThreshold = 80
   const photos = [profile.photo1, profile.photo2].filter(Boolean)
 
+  // Deliberate threshold: requires 135px displacement or strong flick with at least 50px intent
   const handleDragEnd = async (_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const offset = info.offset.x
     const velocity = info.velocity.x
-    if (offset > swipeThreshold || velocity > 400) {
+
+    const isLike = offset > 135 || (offset > 50 && velocity > 700)
+    const isPass = offset < -135 || (offset < -50 && velocity < -700)
+
+    if (isLike) {
       await swipeAction('like')
-    } else if (offset < -swipeThreshold || velocity < -400) {
+    } else if (isPass) {
       await swipeAction('pass')
     } else {
-      controls.start({ x: 0, rotate: 0, transition: { type: 'spring', stiffness: 400, damping: 28 } })
+      // Smooth, natural spring back to center when released halfway
+      controls.start({ 
+        x: 0, 
+        rotate: 0, 
+        transition: { type: 'spring', stiffness: 500, damping: 32 } 
+      })
     }
   }
 
@@ -357,7 +366,11 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
             </button>
 
             {/* Subtle Profile Details Pill (Tap to scroll down) */}
-            <div className="absolute bottom-24 inset-x-0 flex justify-center items-center z-25 pointer-events-auto">
+            <div 
+              className="absolute bottom-24 inset-x-0 flex justify-center items-center z-25 pointer-events-auto"
+              onPointerDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+            >
               <button
                 type="button"
                 onClick={scrollToDetails}
@@ -478,7 +491,11 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
         </div>
 
         {/* 3 Badoo Action Buttons (Pure White Circles + Solid Black Icons, Swiped with pic!) */}
-        <div className="absolute bottom-5 sm:bottom-6 inset-x-0 flex items-center justify-center gap-5 sm:gap-6 z-30 pointer-events-auto">
+        <div 
+          className="absolute bottom-5 sm:bottom-6 inset-x-0 flex items-center justify-center gap-5 sm:gap-6 z-30 pointer-events-auto"
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
           {/* Pass Button (X) */}
           <button
             type="button"
