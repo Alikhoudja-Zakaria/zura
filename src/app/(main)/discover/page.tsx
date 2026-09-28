@@ -9,7 +9,7 @@ import MatchModal from '@/components/cards/MatchModal'
 import { CountryFlag } from '@/components/ui/CountryFlag'
 import { 
   X, RotateCcw, SlidersHorizontal, Sparkles, 
-  MapPin
+  MapPin, Zap, Flame, CheckCircle2
 } from 'lucide-react'
 
 export default function DiscoverPage() {
@@ -19,8 +19,33 @@ export default function DiscoverPage() {
   const [interestFilter, setInterestFilter] = useState<'all' | 'women' | 'men' | 'friends'>('all')
   const [citySearch, setCitySearch] = useState('')
   const [showFilterModal, setShowFilterModal] = useState(false)
+  const [showBoostModal, setShowBoostModal] = useState(false)
+  const [isBoosted, setIsBoosted] = useState(false)
+  const [boostMinutesLeft, setBoostMinutesLeft] = useState(30)
   const [loading, setLoading] = useState(true)
   const [matchData, setMatchData] = useState<{ user1: UserProfile; user2: UserProfile } | null>(null)
+
+  // Boost timer management
+  useEffect(() => {
+    const boostExpiry = localStorage.getItem('zura_boost_expiry')
+    if (boostExpiry) {
+      const remaining = Math.max(0, Math.floor((parseInt(boostExpiry, 10) - Date.now()) / 60000))
+      if (remaining > 0) {
+        setIsBoosted(true)
+        setBoostMinutesLeft(remaining)
+      } else {
+        localStorage.removeItem('zura_boost_expiry')
+      }
+    }
+  }, [])
+
+  const handleActivateBoost = () => {
+    const expiry = Date.now() + 30 * 60 * 1000
+    localStorage.setItem('zura_boost_expiry', expiry.toString())
+    setIsBoosted(true)
+    setBoostMinutesLeft(30)
+    setShowBoostModal(false)
+  }
 
   const loadProfiles = async () => {
     if (!user || !profile) return
@@ -131,29 +156,49 @@ export default function DiscoverPage() {
   const isCustomFiltered = selectedCountry !== 'all' || interestFilter !== 'all' || !!citySearch
 
   return (
-    <div className="relative h-full w-full overflow-hidden flex flex-col items-center justify-center p-2 sm:p-3 touch-none select-none overscroll-none bg-[#FDFBF9]">
+    <div className="relative h-full w-full overflow-hidden flex flex-col items-center select-none bg-[#FAFAFA]">
       
-      {/* Clean Badoo Menu / Filter Button on Top-Right (No upper bar) */}
-      <button
-        type="button"
-        onClick={() => setShowFilterModal(true)}
-        className="absolute top-3.5 right-3.5 z-40 w-11 h-11 rounded-full bg-white shadow-lg flex items-center justify-center text-black hover:bg-gray-50 active:scale-95 transition-all cursor-pointer border border-gray-100"
-        title="Filter & Preferences"
-      >
-        <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-          <line x1="1" y1="1" x2="17" y2="1" />
-          <line x1="1" y1="7" x2="17" y2="7" />
-          <line x1="1" y1="13" x2="17" y2="13" />
-        </svg>
-        {isCustomFiltered && (
-          <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-[#FF385C] border-2 border-white"></span>
-        )}
-      </button>
+      {/* Clean Badoo Top Header (Outside the Card) */}
+      <header className="w-full max-w-[430px] flex items-center justify-between px-4 pt-3.5 pb-2 shrink-0 z-30">
+        <h1 className="text-2xl sm:text-[28px] font-black text-[#1A1A2E] tracking-tight">
+          Encounters
+        </h1>
 
-      {/* Main Full-Screen Card Deck Area (Card takes 100% of height, completely non-scrollable) */}
-      <div className="h-full w-full max-w-[430px] flex items-center justify-center relative touch-none overscroll-none">
+        <div className="flex items-center gap-2">
+          {/* Boost Me Pill Button (Badoo Style) */}
+          <button
+            type="button"
+            onClick={() => setShowBoostModal(true)}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95 ${
+              isBoosted
+                ? 'bg-amber-400 text-black border border-amber-500 shadow-amber-200'
+                : 'bg-black text-white hover:bg-neutral-800'
+            }`}
+            title="Super Boost Profile"
+          >
+            <Zap size={13} className={isBoosted ? 'fill-black stroke-black animate-bounce' : 'fill-white stroke-white'} />
+            <span>{isBoosted ? `Boosted (${boostMinutesLeft}m)` : 'Boost Me'}</span>
+          </button>
+
+          {/* Sliders / Filter Icon Button (Badoo Style) */}
+          <button
+            type="button"
+            onClick={() => setShowFilterModal(true)}
+            className="relative p-2 rounded-full text-black hover:bg-black/5 active:scale-95 transition-all cursor-pointer"
+            title="Filter & Discovery Preferences"
+          >
+            <SlidersHorizontal size={22} strokeWidth={2.2} />
+            {isCustomFiltered && (
+              <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-[#FF385C] border-2 border-white"></span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Main Card Deck Area (Card takes remaining height, no page scrolling) */}
+      <div className="flex-1 min-h-0 w-full max-w-[430px] flex items-center justify-center relative px-2.5 pb-2.5 sm:px-3 sm:pb-3">
         {loading ? (
-          <div className="h-full w-full rounded-[28px] bg-gray-950 border border-gray-800 shadow-2xl animate-pulse flex flex-col justify-between p-6">
+          <div className="h-full w-full rounded-[28px] sm:rounded-[32px] bg-gray-900 border border-gray-800 shadow-xl animate-pulse flex flex-col justify-between p-6">
             <div className="h-8 w-44 bg-gray-800 rounded-lg mt-4"></div>
             <div className="h-16 w-64 mx-auto bg-gray-800 rounded-full mb-6"></div>
           </div>
@@ -178,7 +223,7 @@ export default function DiscoverPage() {
             />
           </div>
         ) : (
-          <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 bg-white rounded-[28px] border border-gray-200/80 shadow-md">
+          <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 bg-white rounded-[28px] sm:rounded-[32px] border border-gray-200/80 shadow-md">
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-rose-50 text-2xl border border-rose-100 relative">
               {selectedCountry !== 'all' ? (
                 <CountryFlag country={selectedCountry} size="lg" />
@@ -222,7 +267,58 @@ export default function DiscoverPage() {
         )}
       </div>
 
-      {/* Preferences Modal Sheet (Filters hidden behind the ≡ menu button) */}
+      {/* Boost Modal (Badoo Style) */}
+      {showBoostModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[28px] p-6 w-full max-w-sm shadow-2xl space-y-5 animate-in fade-in zoom-in-95 text-center relative">
+            <button
+              onClick={() => setShowBoostModal(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-16 h-16 rounded-full bg-amber-100 border-2 border-amber-300 flex items-center justify-center mx-auto text-amber-500 shadow-md">
+              <Zap size={32} className="fill-amber-400 stroke-amber-600" />
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black text-[#0F172A] tracking-tight">
+                Super Boost Your Profile
+              </h3>
+              <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                Be seen first by hundreds of active singles in Algeria 🇩🇿, Morocco 🇲🇦, and Tunisia 🇹🇳. Get up to 5x more encounters!
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-left space-y-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
+                <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                <span>Priority placement in Encounters</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
+                <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                <span>Highlighted with special badge</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
+                <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                <span>Active for 30 minutes</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleActivateBoost}
+              className="w-full py-3.5 bg-black hover:bg-neutral-800 text-white rounded-2xl font-bold text-sm shadow-lg active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Zap size={16} className="fill-white" />
+              <span>{isBoosted ? 'Extend Boost (+30m)' : 'Activate Boost for Free'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Preferences Modal Sheet (Filters hidden behind the sliders button) */}
       {showFilterModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-[28px] p-6 w-full max-w-md shadow-2xl space-y-5 animate-in fade-in zoom-in-95">

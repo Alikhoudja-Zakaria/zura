@@ -1,13 +1,14 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from 'framer-motion'
 import { UserProfile } from '@/types'
 import { getCountryName } from '@/lib/utils'
 import { CountryFlag } from '@/components/ui/CountryFlag'
 import { 
   X, Heart, Sparkles, Flag, MoreHorizontal, 
-  Briefcase, Globe, MessageSquareQuote, ChevronDown 
+  Briefcase, Globe, MessageSquareQuote, ChevronDown, ChevronUp,
+  Coffee, Users, Check
 } from 'lucide-react'
 import ReportModal from '@/components/ui/ReportModal'
 
@@ -45,6 +46,18 @@ function HeartArrowIcon({ className = "w-7 h-7" }: { className?: string }) {
   )
 }
 
+// Badoo Blue Verified Checkmark Badge
+function VerifiedBadge() {
+  return (
+    <span
+      className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0088FF] text-white shadow-xs shrink-0"
+      title="Verified Profile"
+    >
+      <Check size={12} strokeWidth={3.5} />
+    </span>
+  )
+}
+
 interface ProfileCardProps {
   profile: UserProfile
   onSwipe: (direction: 'like' | 'pass') => void
@@ -55,6 +68,7 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
   const [showReport, setShowReport] = useState(false)
   const [activePhotoIdx, setActivePhotoIdx] = useState(0)
   const [hasSwiped, setHasSwiped] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
   
   const x = useMotionValue(0)
   const controls = useAnimation()
@@ -92,11 +106,31 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
     onSwipe(direction)
   }
 
-  // Preloaded background card waiting behind the active card
+  const scrollToDetails = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.clientHeight * 0.85,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  const scrollToTop = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  // Preloaded background card waiting behind the active card in the DOM
   if (!active) {
     return (
       <div className="absolute inset-0 z-0 flex flex-col items-center pointer-events-none select-none overflow-hidden">
-        <div className="relative h-full w-full rounded-[28px] bg-black shadow-lg overflow-hidden scale-[0.98] translate-y-1.5 opacity-95 transition-transform duration-300">
+        <div className="relative h-full w-full rounded-[28px] sm:rounded-[32px] bg-black shadow-lg overflow-hidden scale-[0.98] translate-y-1.5 opacity-95 transition-transform duration-300">
           <img
             src={profile.photo1 || 'https://via.placeholder.com/400x533?text=No+Photo'}
             alt={profile.name}
@@ -105,26 +139,49 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
             draggable="false"
           />
 
+          {/* Top subtle vignette */}
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/75 via-black/30 to-transparent pointer-events-none" />
+
+          {/* Bottom subtle vignette */}
+          <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none" />
+
           {/* Top-Left Info Overlay on Background Card (Badoo Style) */}
-          <div className="absolute top-6 left-4 z-20 flex flex-col items-start text-white">
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">
-              {profile.name}, {profile.age}
-            </h2>
-            <div className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E51C38] text-white text-xs font-bold shadow-md">
-              <Heart size={12} className="fill-white stroke-white" />
-              <span>
-                {profile.lookingFor === 'serious' ? 'Serious' :
-                 profile.lookingFor === 'friends' ? 'New Friends' : 'Liked you'}
-              </span>
+          <div className="absolute top-5 left-4 z-20 flex flex-col items-start text-white">
+            <div className="flex items-center gap-1.5">
+              <VerifiedBadge />
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                {profile.name}, {profile.age}
+              </h2>
             </div>
-            <div className="flex items-center gap-1.5 text-white/90 text-xs font-semibold drop-shadow-md mt-1">
+            
+            {/* Crisp White Pill Badge (Badoo Style) */}
+            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 text-[#1A1A2E] text-xs font-bold shadow-md">
+              {profile.lookingFor === 'serious' ? (
+                <>
+                  <Heart size={13} className="fill-[#FF385C] text-[#FF385C]" />
+                  <span>Serious Relationship</span>
+                </>
+              ) : profile.lookingFor === 'friends' ? (
+                <>
+                  <Users size={13} className="text-[#0088FF]" />
+                  <span>New Friends</span>
+                </>
+              ) : (
+                <>
+                  <Coffee size={13} className="text-[#8C4A1E]" />
+                  <span>Here to date</span>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 text-white/95 text-xs font-semibold drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)] mt-1.5">
               <CountryFlag country={profile.country} size="xs" />
               <span>{profile.city}, {getCountryName(profile.country)}</span>
             </div>
           </div>
 
           {/* Action Buttons Pre-rendered on Background Card (Badoo Black & White) */}
-          <div className="absolute bottom-6 inset-x-0 flex items-center justify-center gap-6 z-30">
+          <div className="absolute bottom-5 sm:bottom-6 inset-x-0 flex items-center justify-center gap-5 sm:gap-6 z-30">
             <div className="w-16 h-16 rounded-full bg-white shadow-[0_8px_25px_rgba(0,0,0,0.35)] flex items-center justify-center text-black">
               <X size={32} strokeWidth={3} className="text-black" />
             </div>
@@ -143,12 +200,11 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center select-none overflow-hidden">
       <motion.div
-        className="relative h-full w-full rounded-[28px] bg-black shadow-2xl overflow-hidden flex flex-col select-none"
-        style={{ x, rotate, opacity }}
+        className="relative h-full w-full rounded-[28px] sm:rounded-[32px] bg-black shadow-[0_12px_40px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col select-none"
+        style={{ x, rotate, opacity, touchAction: 'pan-y' }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.65}
-        dragDirectionLock
         onDragEnd={handleDragEnd}
         animate={controls}
       >
@@ -168,8 +224,12 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
           PASS
         </motion.div>
 
-        {/* Scrollable Container INSIDE the card (Enables natural scrolling down to view bio & details) */}
-        <div className="h-full w-full overflow-y-auto overscroll-contain scrollbar-hide flex flex-col relative select-none">
+        {/* Scrollable Container INSIDE the card (Natural touch & wheel scrolling to view bio/details) */}
+        <div 
+          ref={scrollRef}
+          className="h-full w-full overflow-y-auto overscroll-contain scroll-smooth touch-pan-y scrollbar-hide flex flex-col relative select-none"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           
           {/* Main Hero Photo Viewport (100% of visible card height) */}
           <div className="relative w-full h-full min-h-full shrink-0 bg-black flex flex-col justify-between overflow-hidden">
@@ -181,11 +241,17 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
               loading="eager"
             />
 
-            {/* Photo Tap Areas (Left/Right to switch photo) */}
+            {/* Top subtle vignette */}
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/75 via-black/30 to-transparent pointer-events-none z-10" />
+
+            {/* Bottom subtle vignette for contrast */}
+            <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none z-10" />
+
+            {/* Upper Photo Tap Areas (Left/Right to switch photo - upper 55% only to allow smooth bottom touch scroll) */}
             {photos.length > 1 && (
-              <div className="absolute inset-0 z-20 flex">
+              <div className="absolute top-0 inset-x-0 h-[55%] z-20 flex pointer-events-auto">
                 <div 
-                  className="w-1/2 h-[75%] cursor-pointer"
+                  className="w-1/2 h-full cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation()
                     setActivePhotoIdx(prev => (prev > 0 ? prev - 1 : prev))
@@ -193,7 +259,7 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
                   title="Previous photo"
                 />
                 <div 
-                  className="w-1/2 h-[75%] cursor-pointer"
+                  className="w-1/2 h-full cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation()
                     setActivePhotoIdx(prev => (prev < photos.length - 1 ? prev + 1 : prev))
@@ -205,33 +271,50 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
 
             {/* Vertical Photo Slider Indicator on Right Edge (Badoo Style) */}
             {photos.length > 1 && (
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 z-25 flex flex-col gap-1.5 pointer-events-none">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 z-25 flex flex-col gap-1.5 pointer-events-none">
                 {photos.map((_, i) => (
                   <div
                     key={i}
-                    className={`w-1 rounded-full transition-all ${
-                      activePhotoIdx === i ? 'h-8 bg-white shadow-xs' : 'h-3 bg-white/40'
+                    className={`w-1 rounded-full transition-all duration-200 ${
+                      activePhotoIdx === i 
+                        ? 'h-8 bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' 
+                        : 'h-3 bg-white/40'
                     }`}
                   />
                 ))}
               </div>
             )}
 
-            {/* Top-Left Info (Badoo Style: Name, Age & Red Liked You / Intent Badge) */}
-            <div className="absolute top-6 left-4 z-30 flex flex-col items-start pointer-events-none select-none">
-              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">
-                {profile.name}, {profile.age}
-              </h2>
+            {/* Top-Left Info (Badoo Style: Verified Badge + Name, Age + White Pill Badge) */}
+            <div className="absolute top-5 left-4 z-30 flex flex-col items-start pointer-events-none select-none">
+              <div className="flex items-center gap-1.5">
+                <VerifiedBadge />
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                  {profile.name}, {profile.age}
+                </h2>
+              </div>
               
-              <div className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E51C38] text-white text-xs font-bold shadow-md">
-                <Heart size={12} className="fill-white stroke-white" />
-                <span>
-                  {profile.lookingFor === 'serious' ? 'Serious' :
-                   profile.lookingFor === 'friends' ? 'New Friends' : 'Liked you'}
-                </span>
+              {/* Crisp White Pill Badge (Badoo Style) */}
+              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 text-[#1A1A2E] text-xs font-bold shadow-md backdrop-blur-xs">
+                {profile.lookingFor === 'serious' ? (
+                  <>
+                    <Heart size={13} className="fill-[#FF385C] text-[#FF385C]" />
+                    <span>Serious Relationship</span>
+                  </>
+                ) : profile.lookingFor === 'friends' ? (
+                  <>
+                    <Users size={13} className="text-[#0088FF]" />
+                    <span>New Friends</span>
+                  </>
+                ) : (
+                  <>
+                    <Coffee size={13} className="text-[#8C4A1E]" />
+                    <span>Here to date</span>
+                  </>
+                )}
               </div>
 
-              <div className="flex items-center gap-1.5 text-white/90 text-xs font-semibold drop-shadow-md mt-1">
+              <div className="flex items-center gap-1.5 text-white/95 text-xs font-semibold drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)] mt-1.5">
                 <CountryFlag country={profile.country} size="xs" />
                 <span>{profile.city}, {getCountryName(profile.country)}</span>
               </div>
@@ -244,23 +327,39 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
                 e.stopPropagation()
                 setShowReport(true)
               }}
-              className="absolute top-6 right-4 z-30 p-2.5 rounded-full bg-black/35 backdrop-blur-xs text-white hover:bg-black/55 active:scale-95 transition-all shadow-md pointer-events-auto cursor-pointer"
+              className="absolute top-5 right-4 z-30 p-2.5 rounded-full bg-black/25 hover:bg-black/50 backdrop-blur-xs text-white active:scale-95 transition-all shadow-md pointer-events-auto cursor-pointer"
               title="Report profile"
             >
-              <MoreHorizontal size={22} className="text-white" />
+              <MoreHorizontal size={22} className="text-white drop-shadow-md" />
             </button>
 
-            {/* Subtle Scroll Hint just above the buttons */}
-            <div className="absolute bottom-24 inset-x-0 flex justify-center items-center z-20 pointer-events-none">
-              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/40 backdrop-blur-xs text-[11px] font-semibold text-white/80 border border-white/10 shadow-xs">
-                <span>Scroll for bio & details</span>
-                <ChevronDown size={14} className="animate-bounce" />
-              </div>
+            {/* Subtle Expand Indicator (Clean pill above the action buttons with breathing room) */}
+            <div className="absolute bottom-24 inset-x-0 flex justify-center items-center z-25 pointer-events-auto">
+              <button
+                type="button"
+                onClick={scrollToDetails}
+                className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-black/35 hover:bg-black/55 backdrop-blur-md text-[11px] font-semibold text-white/90 border border-white/15 shadow-sm active:scale-95 transition-all cursor-pointer"
+              >
+                <span>Profile details</span>
+                <ChevronDown size={13} className="animate-bounce" />
+              </button>
             </div>
           </div>
 
           {/* Details Section inside the card (Revealed by scrolling down!) */}
           <div className="p-5 space-y-4 bg-white flex-1 shrink-0 pb-36 border-t border-gray-100">
+            {/* Scroll back to photo button */}
+            <div className="flex justify-center pt-1 pb-1">
+              <button
+                type="button"
+                onClick={scrollToTop}
+                className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <ChevronUp size={14} />
+                <span>Back to photo</span>
+              </button>
+            </div>
+
             {/* About Me / Bio */}
             {profile.bio && (
               <div className="bg-[#FAF8F5] p-4 rounded-2xl border border-[#F0ECE6]">
@@ -342,7 +441,7 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
             )}
 
             {/* Report Profile Button */}
-            <div className="pt-3 pb-2 text-center border-t border-gray-100">
+            <div className="pt-4 pb-2 text-center border-t border-gray-100">
               <button
                 type="button"
                 onClick={() => setShowReport(true)}
@@ -356,7 +455,7 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
         </div>
 
         {/* 3 Badoo Action Buttons (Pure White Circles + Solid Black Icons, Swiped with pic!) */}
-        <div className="absolute bottom-6 inset-x-0 flex items-center justify-center gap-6 z-30 pointer-events-auto">
+        <div className="absolute bottom-5 sm:bottom-6 inset-x-0 flex items-center justify-center gap-5 sm:gap-6 z-30 pointer-events-auto">
           {/* Pass Button (X) */}
           <button
             type="button"
@@ -364,7 +463,7 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
               e.stopPropagation()
               swipeAction('pass')
             }}
-            className="w-16 h-16 rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.4)] flex items-center justify-center text-black hover:scale-110 active:scale-90 transition-transform cursor-pointer border border-gray-100"
+            className="w-16 h-16 rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.38)] flex items-center justify-center text-black hover:scale-110 active:scale-90 transition-transform cursor-pointer border border-gray-100"
             title="Pass"
           >
             <X size={32} strokeWidth={3} className="text-black" />
@@ -377,7 +476,7 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
               e.stopPropagation()
               swipeAction('like')
             }}
-            className="w-14 h-14 rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.4)] flex items-center justify-center text-black hover:scale-110 active:scale-90 transition-transform cursor-pointer border border-gray-100"
+            className="w-14 h-14 rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.38)] flex items-center justify-center text-black hover:scale-110 active:scale-90 transition-transform cursor-pointer border border-gray-100"
             title="Crush"
           >
             <HeartArrowIcon className="w-7 h-7" />
@@ -390,7 +489,7 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
               e.stopPropagation()
               swipeAction('like')
             }}
-            className="w-16 h-16 rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.4)] flex items-center justify-center text-black hover:scale-110 active:scale-90 transition-transform cursor-pointer border border-gray-100"
+            className="w-16 h-16 rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.38)] flex items-center justify-center text-black hover:scale-110 active:scale-90 transition-transform cursor-pointer border border-gray-100"
             title="Like"
           >
             <Heart size={34} className="fill-black stroke-black text-black" />
