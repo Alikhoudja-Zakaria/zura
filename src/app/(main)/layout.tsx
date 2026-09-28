@@ -45,8 +45,8 @@ export default function MainLayout({
 
   return (
     <div className="flex h-[100dvh] flex-col bg-[#FDFBF9] overflow-hidden">
-      {/* Top Header (Hidden in chat rooms) */}
-      {!isChatRoom && (
+      {/* Top Header (Hidden in chat rooms & discover) */}
+      {!isChatRoom && !isDiscover && (
         <header className="flex h-14 items-center justify-between px-4 sm:px-6 md:hidden bg-white border-b border-gray-100 z-10 shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-2xl font-black tracking-tight text-[#FF385C]">ZURA</span>

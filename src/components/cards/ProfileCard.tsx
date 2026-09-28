@@ -6,8 +6,8 @@ import { UserProfile } from '@/types'
 import { getCountryName } from '@/lib/utils'
 import { CountryFlag } from '@/components/ui/CountryFlag'
 import { 
-  Sparkles, Flag, Users, CheckCircle2, ChevronDown, 
-  Briefcase, Globe, MessageSquareQuote, MapPin 
+  X, Heart, Star, Sparkles, Flag, Users, CheckCircle2, ChevronDown, 
+  Briefcase, Globe, MessageSquareQuote, MoreHorizontal
 } from 'lucide-react'
 import ReportModal from '@/components/ui/ReportModal'
 
@@ -20,17 +20,17 @@ interface ProfileCardProps {
 export default function ProfileCard({ profile, onSwipe, active }: ProfileCardProps) {
   const [showReport, setShowReport] = useState(false)
   const [activePhotoIdx, setActivePhotoIdx] = useState(0)
+  const [hasSwiped, setHasSwiped] = useState(false)
+  
   const x = useMotionValue(0)
   const controls = useAnimation()
   
-  const rotate = useTransform(x, [-200, 200], [-10, 10])
-  const opacity = useTransform(x, [-250, -150, 0, 150, 250], [0.4, 1, 1, 1, 0.4])
+  const rotate = useTransform(x, [-200, 200], [-12, 12])
+  const opacity = useTransform(x, [-260, -160, 0, 160, 260], [0.3, 1, 1, 1, 0.3])
   const likeOpacity = useTransform(x, [0, 80], [0, 1])
   const nopeOpacity = useTransform(x, [-80, 0], [1, 0])
 
-  const [hasSwiped, setHasSwiped] = useState(false)
   const swipeThreshold = 80
-
   const photos = [profile.photo1, profile.photo2].filter(Boolean)
 
   const handleDragEnd = async (_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -41,39 +41,69 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
     } else if (offset < -swipeThreshold || velocity < -400) {
       await swipeAction('pass')
     } else {
-      controls.start({ x: 0, rotate: 0, transition: { type: 'spring', stiffness: 350, damping: 25 } })
+      controls.start({ x: 0, rotate: 0, transition: { type: 'spring', stiffness: 380, damping: 26 } })
     }
   }
 
   const swipeAction = async (direction: 'like' | 'pass') => {
     if (!active || hasSwiped) return
     setHasSwiped(true)
-    const xDest = direction === 'like' ? 500 : -500
+    const xDest = direction === 'like' ? 650 : -650
     await controls.start({
       x: xDest,
-      rotate: direction === 'like' ? 14 : -14,
+      rotate: direction === 'like' ? 16 : -16,
       opacity: 0,
-      transition: { duration: 0.22, ease: 'easeOut' }
+      transition: { duration: 0.24, ease: 'easeOut' }
     })
     onSwipe(direction)
   }
 
-  // Background cards in the deck
+  // Preloaded background card waiting behind the active card
   if (!active) {
     return (
-      <div className="absolute inset-0 z-0 flex flex-col items-center pointer-events-none">
-        <div className="relative h-full w-full rounded-3xl bg-white shadow-md border border-gray-200/60 overflow-hidden scale-[0.96] translate-y-2 opacity-90 transition-transform">
-          <div className="relative w-full h-full">
-            <img
-              src={profile.photo1 || 'https://via.placeholder.com/400x533?text=No+Photo'}
-              alt={profile.name}
-              className="absolute inset-0 h-full w-full object-cover rounded-3xl"
-            />
-            <div className="absolute bottom-0 left-0 w-full p-4 bg-[#0F172A]/85 backdrop-blur-xs">
-              <div className="flex items-end gap-2">
-                <h2 className="text-2xl font-black text-white tracking-tight">{profile.name}</h2>
-                <span className="text-xl font-normal text-gray-200">{profile.age}</span>
-              </div>
+      <div className="absolute inset-0 z-0 flex flex-col items-center pointer-events-none select-none">
+        <div className="relative h-full w-full rounded-[28px] bg-black shadow-lg border border-gray-200/50 overflow-hidden scale-[0.98] translate-y-1.5 opacity-95 transition-transform duration-300">
+          <img
+            src={profile.photo1 || 'https://via.placeholder.com/400x533?text=No+Photo'}
+            alt={profile.name}
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="eager"
+            draggable="false"
+          />
+
+          {/* Top-Left Info Overlay on Background Card */}
+          <div className="absolute top-6 left-4 z-20 flex flex-col items-start text-white">
+            <div className="flex items-center gap-2">
+              <h2 className="text-3xl font-black tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
+                {profile.name}, {profile.age}
+              </h2>
+              <CheckCircle2 size={20} className="text-rose-400 drop-shadow-md shrink-0 fill-rose-500 text-white" />
+            </div>
+            <div className="mt-1.5 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/45 backdrop-blur-md border border-white/20 text-xs font-bold text-white shadow-sm">
+              <CountryFlag country={profile.country} size="xs" />
+              <span>{profile.city}, {getCountryName(profile.country)}</span>
+              {profile.lookingFor && (
+                <>
+                  <span className="text-white/40">•</span>
+                  <span>
+                    {profile.lookingFor === 'serious' ? '💝 Serious' :
+                     profile.lookingFor === 'casual' ? '😊 Casual' : '🤝 Friends'}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons Pre-rendered on Background Card */}
+          <div className="absolute bottom-5 inset-x-0 flex items-center justify-center gap-5 z-30">
+            <div className="w-14 h-14 rounded-full bg-white shadow-md flex items-center justify-center text-[#1A1A2E] border border-gray-100 opacity-95">
+              <X size={28} strokeWidth={2.8} />
+            </div>
+            <div className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-amber-500 border border-gray-100 opacity-95">
+              <Star size={22} className="fill-amber-400 stroke-amber-500" />
+            </div>
+            <div className="w-16 h-16 rounded-full bg-white shadow-md flex items-center justify-center text-[#FF385C] border border-gray-100 opacity-95">
+              <Heart size={34} className="fill-[#FF385C] stroke-[#FF385C]" />
             </div>
           </div>
         </div>
@@ -84,20 +114,19 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center select-none">
       <motion.div
-        className="relative h-full w-full rounded-3xl bg-white shadow-xl border border-gray-200/80 overflow-hidden flex flex-col"
+        className="relative h-full w-full rounded-[28px] bg-black shadow-2xl border border-gray-200/60 overflow-hidden flex flex-col touch-none"
         style={{ x, rotate, opacity }}
-        drag={active ? 'x' : false}
+        drag="x"
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.6}
+        dragElastic={0.65}
         dragDirectionLock
         onDragEnd={handleDragEnd}
         animate={controls}
-        whileTap={{ cursor: 'grabbing' }}
       >
         {/* Like Stamp Overlay */}
         <motion.div
           style={{ opacity: likeOpacity }}
-          className="absolute right-6 top-6 z-30 rounded-2xl border-4 border-emerald-500 bg-emerald-500/90 px-4 py-1 text-2xl font-black text-white rotate-12 shadow-md pointer-events-none tracking-wider"
+          className="absolute right-6 top-8 z-40 rounded-2xl border-4 border-emerald-500 bg-emerald-500/90 px-4 py-1.5 text-2xl font-black text-white rotate-12 shadow-xl pointer-events-none tracking-wider uppercase"
         >
           LIKE
         </motion.div>
@@ -105,34 +134,31 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
         {/* Pass Stamp Overlay */}
         <motion.div
           style={{ opacity: nopeOpacity }}
-          className="absolute left-6 top-6 z-30 rounded-2xl border-4 border-rose-500 bg-rose-500/90 px-4 py-1 text-2xl font-black text-white -rotate-12 shadow-md pointer-events-none tracking-wider"
+          className="absolute left-6 top-8 z-40 rounded-2xl border-4 border-rose-500 bg-rose-500/90 px-4 py-1.5 text-2xl font-black text-white -rotate-12 shadow-xl pointer-events-none tracking-wider uppercase"
         >
           PASS
         </motion.div>
 
-        {/* Scrollable Card Body (Badoo style: only INSIDE the card scrolls) */}
-        <div className="h-full w-full overflow-y-auto scrollbar-hide touch-pan-y overscroll-contain flex flex-col">
-          {/* Main Photo Section (Fills full first viewport of the card) */}
-          <div className="relative w-full h-[74%] min-h-[300px] shrink-0 bg-gray-900">
+        {/* Scrollable Card Body (Badoo style: inside the card scrolls to read full profile) */}
+        <div className="h-full w-full overflow-y-auto scrollbar-hide touch-pan-y overscroll-contain flex flex-col relative">
+          
+          {/* Main Hero Photo Viewport (Takes entire card height initially) */}
+          <div className="relative w-full h-full min-h-[500px] shrink-0 bg-black flex flex-col justify-between">
             <img
               src={photos[activePhotoIdx] || profile.photo1 || 'https://via.placeholder.com/400x533?text=No+Photo'}
               alt={profile.name}
-              className="absolute inset-0 h-full w-full object-cover select-none"
+              className="absolute inset-0 h-full w-full object-cover select-none pointer-events-none"
               draggable="false"
+              loading="eager"
             />
 
             {/* Photo indicators bar (top) */}
             {photos.length > 1 && (
-              <div className="absolute top-3 inset-x-3 flex gap-1.5 z-20">
+              <div className="absolute top-3 inset-x-3 flex gap-1.5 z-30 pointer-events-none">
                 {photos.map((_, i) => (
-                  <button
+                  <div
                     key={i}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setActivePhotoIdx(i)
-                    }}
-                    className={`h-1.5 flex-1 rounded-full transition-all ${
+                    className={`h-1 flex-1 rounded-full transition-all ${
                       activePhotoIdx === i ? 'bg-white shadow-xs' : 'bg-white/40'
                     }`}
                   />
@@ -140,11 +166,11 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
               </div>
             )}
 
-            {/* Tap left / right navigation overlay */}
+            {/* Tap left / right navigation zones */}
             {photos.length > 1 && (
-              <div className="absolute inset-0 z-10 flex">
+              <div className="absolute inset-0 z-20 flex">
                 <div 
-                  className="w-1/2 h-3/4 cursor-pointer"
+                  className="w-1/2 h-[75%] cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation()
                     setActivePhotoIdx(prev => (prev > 0 ? prev - 1 : prev))
@@ -152,7 +178,7 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
                   title="Previous photo"
                 />
                 <div 
-                  className="w-1/2 h-3/4 cursor-pointer"
+                  className="w-1/2 h-[75%] cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation()
                     setActivePhotoIdx(prev => (prev < photos.length - 1 ? prev + 1 : prev))
@@ -162,36 +188,54 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
               </div>
             )}
 
-            {/* Info Overlay on Photo (Clean, High contrast, No gradients) */}
-            <div className="absolute bottom-0 left-0 w-full p-4 bg-[#0F172A]/85 backdrop-blur-xs pointer-events-none z-20 border-t border-white/10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-3xl font-black text-white tracking-tight">{profile.name}</h2>
-                  <span className="text-2xl font-light text-gray-200">{profile.age}</span>
-                  <CheckCircle2 size={18} className="text-rose-400 shrink-0" />
-                </div>
-                {profile.online && (
-                  <div className="flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 rounded-full text-emerald-300 text-xs font-bold">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                    Online
-                  </div>
+            {/* Top-Left Info Overlay (Badoo Style: Bold name, age & status pill) */}
+            <div className="absolute top-6 left-4 z-30 flex flex-col items-start pointer-events-none">
+              <div className="flex items-center gap-2">
+                <h2 className="text-3xl font-black text-white tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
+                  {profile.name}, {profile.age}
+                </h2>
+                <CheckCircle2 size={20} className="text-rose-400 drop-shadow-md shrink-0 fill-rose-500 text-white" />
+              </div>
+              
+              <div className="mt-1.5 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/45 backdrop-blur-md border border-white/20 text-xs font-bold text-white shadow-sm">
+                <CountryFlag country={profile.country} size="xs" />
+                <span>{profile.city}, {getCountryName(profile.country)}</span>
+                {profile.lookingFor && (
+                  <>
+                    <span className="text-white/40">•</span>
+                    <span>
+                      {profile.lookingFor === 'serious' ? '💝 Serious' :
+                       profile.lookingFor === 'casual' ? '😊 Casual' : '🤝 Friends'}
+                    </span>
+                  </>
                 )}
               </div>
-              <div className="mt-1 flex items-center justify-between text-xs text-gray-200">
-                <div className="flex items-center gap-1.5 font-medium">
-                  <CountryFlag country={profile.country} size="xs" />
-                  <span>{profile.city}, {getCountryName(profile.country)}</span>
-                </div>
-                <div className="flex items-center gap-1 text-[11px] text-white/70">
-                  <span>Scroll for more</span>
-                  <ChevronDown size={14} className="animate-bounce" />
-                </div>
+            </div>
+
+            {/* Top-Right More / Report Button (Badoo Style: •••) */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowReport(true)
+              }}
+              className="absolute top-6 right-4 z-30 p-2.5 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 active:scale-95 transition-all shadow-md pointer-events-auto cursor-pointer border border-white/10"
+              title="Report or options"
+            >
+              <MoreHorizontal size={20} />
+            </button>
+
+            {/* Subtle Scroll Hint just above the buttons */}
+            <div className="absolute bottom-24 inset-x-0 flex justify-center items-center z-20 pointer-events-none">
+              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/40 backdrop-blur-xs text-[11px] font-semibold text-white/80 border border-white/10 shadow-xs">
+                <span>Scroll for bio & details</span>
+                <ChevronDown size={14} className="animate-bounce" />
               </div>
             </div>
           </div>
 
-          {/* Details Section Inside Card */}
-          <div className="p-5 space-y-4 bg-white flex-1">
+          {/* Details Section Inside Card (Scrollable) */}
+          <div className="p-5 space-y-4 bg-white flex-1 pb-32">
             {/* Quick Profile Tags (Profession, Languages, Relationship) */}
             <div className="flex flex-wrap gap-2">
               {profile.profession && (
@@ -296,6 +340,48 @@ export default function ProfileCard({ profile, onSwipe, active }: ProfileCardPro
               </button>
             </div>
           </div>
+        </div>
+
+        {/* 3 Floating Action Buttons Directly Over the Card (Swiped with the pic!) */}
+        <div className="absolute bottom-5 inset-x-0 flex items-center justify-center gap-5 z-40 pointer-events-auto">
+          {/* Pass Button (X) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              swipeAction('pass')
+            }}
+            className="w-14 h-14 rounded-full bg-white shadow-[0_8px_25px_rgba(0,0,0,0.3)] flex items-center justify-center text-[#1A1A2E] hover:scale-110 active:scale-90 transition-transform cursor-pointer border border-gray-100"
+            title="Pass"
+          >
+            <X size={28} strokeWidth={2.8} />
+          </button>
+
+          {/* Superlike / Star */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              swipeAction('like')
+            }}
+            className="w-12 h-12 rounded-full bg-white shadow-[0_8px_25px_rgba(0,0,0,0.3)] flex items-center justify-center text-amber-500 hover:scale-110 active:scale-90 transition-transform cursor-pointer border border-gray-100"
+            title="Superlike"
+          >
+            <Star size={22} className="fill-amber-400 stroke-amber-500" />
+          </button>
+
+          {/* Like Button (Heart) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              swipeAction('like')
+            }}
+            className="w-16 h-16 rounded-full bg-white shadow-[0_8px_25px_rgba(0,0,0,0.3)] flex items-center justify-center text-[#FF385C] hover:scale-110 active:scale-90 transition-transform cursor-pointer border border-gray-100"
+            title="Like"
+          >
+            <Heart size={34} className="fill-[#FF385C] stroke-[#FF385C]" />
+          </button>
         </div>
       </motion.div>
 
