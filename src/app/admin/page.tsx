@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, ClipboardCheck, Heart, Flag } from 'lucide-react';
+import Link from 'next/link';
+import { Users, ClipboardCheck, Heart, Flag, Sparkles, ArrowRight } from 'lucide-react';
 import { getAdminStats } from '@/lib/firestore';
 
 interface AdminStats {
@@ -67,6 +68,26 @@ export default function AdminDashboard() {
             );
           })
         )}
+      </div>
+
+      {/* Quick Action Banner for Profile Generator */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-rose-50 text-[#FF385C] flex items-center justify-center shrink-0">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="font-bold text-[#1A1A2E] text-base">Fake Profile Generator</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Generate realistic Algerian, Moroccan, and Tunisian profiles with photos, prompts, and bios.</p>
+          </div>
+        </div>
+        <Link
+          href="/admin/generator"
+          className="px-5 py-2.5 bg-[#FF385C] hover:bg-[#e03150] text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shrink-0 shadow-xs"
+        >
+          <span>Open Generator</span>
+          <ArrowRight size={14} />
+        </Link>
       </div>
     </div>
   );

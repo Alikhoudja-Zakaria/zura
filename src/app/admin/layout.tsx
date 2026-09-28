@@ -4,10 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, ClipboardCheck, Users, Flag, LogOut } from 'lucide-react';
+import { LayoutDashboard, ClipboardCheck, Users, Flag, LogOut, Sparkles } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Generator', href: '/admin/generator', icon: Sparkles },
   { name: 'Reviews', href: '/admin/reviews', icon: ClipboardCheck },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Reports', href: '/admin/reports', icon: Flag },
