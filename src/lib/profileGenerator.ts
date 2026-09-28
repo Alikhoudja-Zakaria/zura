@@ -1,58 +1,70 @@
-import { doc, setDoc, deleteDoc, getDocs, collection, query, where } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, getDocs, collection } from "firebase/firestore";
 import { db } from "./firebase";
 import { UserProfile, Country } from "@/types";
 
-// High quality SVG data URIs as base64 for generated portraits
-function createGeneratedAvatar(
-  bgColor: string,
-  initials: string,
-  hairColor: string,
-  skinTone: string = "#F3D2B8",
-  gender: "female" | "male" = "female"
-): string {
-  const isFemale = gender === "female";
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="533" viewBox="0 0 400 533">
-    <defs>
-      <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${bgColor}"/>
-        <stop offset="100%" stop-color="${bgColor}E6"/>
-      </linearGradient>
-    </defs>
-    <rect width="400" height="533" fill="url(#bg)"/>
-    <!-- Shoulders -->
-    <path d="M 60 533 C 60 360, 340 360, 340 533 Z" fill="#1E293B"/>
-    <!-- Neck -->
-    <rect x="175" y="240" width="50" height="80" rx="10" fill="${skinTone}"/>
-    <!-- Face / Head -->
-    <ellipse cx="200" cy="180" rx="80" ry="95" fill="${skinTone}"/>
-    <!-- Hair -->
-    ${
-      isFemale
-        ? `<path d="M 115 170 C 115 70, 285 70, 285 170 C 295 270, 275 360, 260 380 C 240 320, 240 220, 240 180 C 210 140, 190 140, 160 180 C 160 220, 160 320, 140 380 C 125 360, 105 270, 115 170 Z" fill="${hairColor}"/>`
-        : `<path d="M 120 160 C 120 70, 280 70, 280 160 C 260 120, 140 120, 120 160 Z" fill="${hairColor}"/>
-           <!-- Male Beard / Stubble -->
-           <path d="M 140 200 C 140 260, 260 260, 260 200 C 260 270, 140 270, 140 200 Z" fill="${hairColor}" opacity="0.35"/>`
-    }
-    <!-- Eyes -->
-    <circle cx="170" cy="175" r="7" fill="#1E293B"/>
-    <circle cx="230" cy="175" r="7" fill="#1E293B"/>
-    <circle cx="172" cy="173" r="2.5" fill="#FFFFFF"/>
-    <circle cx="232" cy="173" r="2.5" fill="#FFFFFF"/>
-    <!-- Eyebrows -->
-    <path d="M 155 160 Q 170 152 185 158" stroke="${hairColor}" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-    <path d="M 215 158 Q 230 152 245 160" stroke="${hairColor}" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-    <!-- Smile -->
-    <path d="M 180 215 Q 200 232 220 215" stroke="#E11D48" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <!-- Name Badge text -->
-    <rect x="100" y="475" width="200" height="38" rx="19" fill="#000000" opacity="0.5"/>
-    <text x="200" y="501" font-family="system-ui, sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">${initials}</text>
-  </svg>`;
+// Curated high-resolution web portrait photos of real young adults (North African / Mediterranean aesthetic)
+const REAL_FEMALE_PHOTOS = [
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1548142813-c348350df52b?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1534751516642-a171edd2521d?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1521566652839-697aa473761a?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1531727991582-cfd25ce79613?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1507152832244-10d45c7eda57?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1517677129300-07b130802f46?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1514315384763-ba401779410f?auto=format&fit=crop&w=800&q=80",
+];
 
-  const base64 = typeof window !== "undefined"
-    ? btoa(unescape(encodeURIComponent(svg)))
-    : Buffer.from(svg).toString("base64");
-  return `data:image/svg+xml;base64,${base64}`;
-}
+const REAL_MALE_PHOTOS = [
+  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1480429370139-e0132c086e2a?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1508243771214-6e85e40077c9?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1496345875659-11f7dd282d1d?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1519764622345-23439dd774f7?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1504257432389-52343af06ae3?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1528892952291-009c663ce843?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1520409364224-63400afe26e5?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80",
+];
+
+// Curated web photos of authentic real lifestyle, coastal views, coffee, medina streets
+const REAL_LIFESTYLE_PHOTOS = [
+  "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80", // Specialty coffee bar
+  "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80", // Sunny cafe terrace
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", // Blue Mediterranean sea
+  "https://images.unsplash.com/photo-1515238152791-8216bfdf89a7?auto=format&fit=crop&w=800&q=80", // Coastal cliff sunset
+  "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=800&q=80", // Historic old town alley
+  "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=800&q=80", // Traditional courtyard & arches
+  "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=800&q=80", // Casual coffee table
+  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80", // Road trip coastline
+  "https://images.unsplash.com/photo-1542314831-c6a4d2757279?auto=format&fit=crop&w=800&q=80", // White & blue sea architecture
+  "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=800&q=80", // Seaside beach stroll
+  "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=800&q=80", // Morning espresso
+  "https://images.unsplash.com/photo-1519052537078-e6302a4968d4?auto=format&fit=crop&w=800&q=80", // Sunset mountain ridge
+];
 
 const FEMALE_NAMES = [
   "Amina", "Yasmine", "Meriem", "Ines", "Kenza", "Sarah", "Leila", "Rania",
@@ -73,70 +85,93 @@ const CITIES: Record<Country, string[]> = {
 };
 
 const PROFESSIONS = [
-  "Architect", "UI/UX Designer", "Software Engineer", "Medical Resident",
-  "Pharmacist", "Marketing Manager", "Graphic Designer", "Civil Engineer",
-  "English Teacher", "Law Student", "Financial Analyst", "Photographer",
-  "Chef & Foodie", "Interior Designer", "Dentist", "Content Creator"
+  "Architecte", "UI Designer", "Développeur", "Médecin résident",
+  "Pharmacienne", "Marketing", "Graphiste", "Ingénieur civil",
+  "Prof d'anglais", "Étudiante en droit", "Analyste financier", "Photographe",
+  "Chef cuisinier", "Architecte d'intérieur", "Dentiste", "Créateur de contenu"
 ];
 
-const PROMPTS = [
+// Natural, realistic human dating prompts without artificial textbook punctuation or emoji spam
+const NATURAL_PROMPTS = [
   {
-    q: "The key to my heart is...",
-    a: "Authentic homemade couscous and honest midnight talks.",
+    q: "la clé de mon coeur...",
+    a: "du bon couscous le vendredi et beaucoup de second degré",
   },
   {
-    q: "Together we could...",
-    a: "Watch the Mediterranean sunset and grab traditional ice cream.",
+    q: "ensemble on pourrait...",
+    a: "aller tester des cafés vue sur mer et débattre pendant des heures",
   },
   {
-    q: "I'm convinced that...",
-    a: "The Casbah and old medinas have the best hidden rooftop cafés in the world.",
+    q: "je suis convaincue que...",
+    a: "les meilleures discussions se font à 2h du matin sans voir le temps passer",
   },
   {
-    q: "A life goal of mine is...",
-    a: "Take a full road trip across Algeria, Morocco, and Tunisia.",
+    q: "un objectif dans ma vie...",
+    a: "faire un road trip complet le long de toute la côte méditerranéenne",
   },
   {
-    q: "My simple pleasures...",
-    a: "Fresh mint tea with pine nuts on a breezy summer evening.",
+    q: "mes petits plaisirs...",
+    a: "un thé à la menthe bien chaud en terrasse avec une brise fraîche",
   },
   {
-    q: "We'll get along if...",
-    a: "You love spontaneous road trips and exploring new cities on foot.",
+    q: "on va bien s'entendre si...",
+    a: "tu te prends pas la tête et t'aimes bien rire de tout",
   },
   {
-    q: "I geek out on...",
-    a: "Traditional Maghreb architecture, tilework (zellige), and specialty coffee.",
+    q: "mon talent inutile...",
+    a: "me souvenir des paroles de sons d'il y a 10 ans mdr",
+  },
+  {
+    q: "le dimanche idéal...",
+    a: "grasse mat, café tardif et longue balade au bord de l'eau",
+  },
+  {
+    q: "ce qui me fait craquer...",
+    a: "l'humour, les gens passionnés et les bonnes conversations sans filtre",
+  },
+  {
+    q: "ma plus grande passion...",
+    a: "dénicher des petits cafés cachés dans les vieilles ruelles",
   },
 ];
 
-const BIOS_FEMALE = [
-  "Passionate about historical architecture, good coffee, and road trips along the coast. Looking for genuine vibes and good conversation.",
-  "Coffee lover, indie music fan, and foodie always on the hunt for the best local spots. Let's exchange playlists!",
-  "Medical student balancing hospital shifts with weekend hikes and book hunting. Always down for sunset walks.",
-  "Designer living between work and creative passions. Looking for someone ambitious with a kind heart and a great sense of humor.",
-  "Big fan of seaside drives, trying new recipes, and spontaneous weekend getaways. Ready for something real.",
+// Natural human dating app bios: casual, natural spacing, lowercase/authentic, zero or 1 emoji max
+const NATURAL_BIOS_FEMALE = [
+  "architecte sur alger, j'aime le bon café et me balader sans but précis",
+  "team thé à la menthe > café et personne me fera changer d'avis haha",
+  "passion voyages et road trips.. dis moi ton son préféré du moment",
+  "ici pour discuter tranquillement et voir si le feeling passe",
+  "plutôt calme mais toujours partante pour tester des nouveaux restos",
+  "médecine le jour, musique et séries le soir",
+  "j'réponds vite sauf quand je dors ou que je bosse mdr",
+  "fan de couchers de soleil sur la corniche et de débats interminables",
+  "casablancaise, entre boulot et sorties chill le weekend",
+  "si tu as du second degré c'est déjà un bon début",
+  "introvertie au début puis pipelette haha",
+  "cherche quelqu'un de spontané avec qui rigoler sans prise de tête",
+  "sur tunis, j'adore la photo et les balades à sidi bou saïd",
+  "curieuse de tout, dis moi ce qui te passionne dans la vie",
 ];
 
-const BIOS_MALE = [
-  "Software engineer who loves football, seaside runs, and deep conversations over mint tea. Looking for a genuine connection.",
-  "Architect & photographer always seeking authentic light and historic spaces. Love road trips and good food.",
-  "Civil engineer passionate about sports, outdoor adventures, and family values. Serious intentions only.",
-  "Creative director and travel enthusiast. Believe that chemistry and kindness matter most.",
-  "Hospitality specialist who loves watersports, weekend cooking, and exploring the Mediterranean coast.",
+const NATURAL_BIOS_MALE = [
+  "développeur le jour, fan de foot et de sorties au bord de mer le soir",
+  "archi & photo, toujours en train de chercher des bons spots et de la bonne lumière",
+  "ingé sur alger, un bon café en terrasse et je suis refait",
+  "ici pour faire de belles rencontres simples et sans prise de tête",
+  "passionné de sport, de voyages improvisés et de bonne bouffe",
+  "cherche quelqu'un de spontané avec qui partager des moments cools",
+  "marrakchi d'origine, j'aime les discussions profondes autour d'un thé",
+  "plutôt chill, si tu me fais rire t'as tout gagné",
+  "ingénieur sur tunis, j'aime la musique et les virées à la plage",
+  "toujours chaud pour un road trip ou un bon café vue sur mer",
+  "simple, travailleur et curieux du monde qui m'entoure",
+  "dis moi ta chanson préférée et je te dis qui tu es haha",
 ];
 
 const INTERESTS_POOL = [
-  "Travel", "Coffee", "Photography", "Music", "Beach", "Fitness", "Cooking",
-  "Art", "Design", "Tech", "Books", "Cinema", "Nature", "Football", "Architecture"
+  "Voyages", "Café", "Photo", "Musique", "Plage", "Fitness", "Cuisine",
+  "Art", "Design", "Tech", "Lecture", "Cinéma", "Nature", "Football", "Architecture"
 ];
-
-const BG_COLORS = [
-  "#264653", "#2A9D8F", "#E76F51", "#F4A261", "#E63946",
-  "#457B9D", "#1D3557", "#6A4C93", "#1982C4", "#8AC926"
-];
-
-const HAIR_COLORS = ["#1A1A1A", "#2C1810", "#3D2314", "#4A2E1B", "#1C1C1E"];
 
 export interface GeneratorOptions {
   count: number;
@@ -169,19 +204,19 @@ export async function generateFakeProfiles(options: GeneratorOptions): Promise<U
     const nameList = targetGender === "female" ? FEMALE_NAMES : MALE_NAMES;
     const name = nameList[Math.floor(Math.random() * nameList.length)];
 
-    // Age between 20 and 32
-    const age = Math.floor(Math.random() * 13) + 20;
+    // Age between 21 and 30
+    const age = Math.floor(Math.random() * 10) + 21;
 
     // City
     const cityList = CITIES[targetCountry];
     const city = cityList[Math.floor(Math.random() * cityList.length)];
 
-    // Bio
-    const bioList = targetGender === "female" ? BIOS_FEMALE : BIOS_MALE;
+    // Natural human-like bio
+    const bioList = targetGender === "female" ? NATURAL_BIOS_FEMALE : NATURAL_BIOS_MALE;
     const bio = bioList[Math.floor(Math.random() * bioList.length)];
 
-    // Prompt
-    const prompt = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
+    // Natural human prompt
+    const prompt = NATURAL_PROMPTS[Math.floor(Math.random() * NATURAL_PROMPTS.length)];
 
     // Profession
     const profession = PROFESSIONS[Math.floor(Math.random() * PROFESSIONS.length)];
@@ -198,18 +233,14 @@ export async function generateFakeProfiles(options: GeneratorOptions): Promise<U
     const interests = shuffledInterests.slice(0, 4);
 
     // Languages
-    const languages = ["Arabic", "French"];
-    if (Math.random() > 0.4) languages.push("English");
-    if (targetCountry === "algeria" && Math.random() > 0.6) languages.push("Berber");
+    const languages = ["Arabe", "Français"];
+    if (Math.random() > 0.4) languages.push("Anglais");
+    if (targetCountry === "algeria" && Math.random() > 0.6) languages.push("Berbère");
 
-    // Colors
-    const bgColor = BG_COLORS[Math.floor(Math.random() * BG_COLORS.length)];
-    const hairColor = HAIR_COLORS[Math.floor(Math.random() * HAIR_COLORS.length)];
-    const photo2BgColor = BG_COLORS[Math.floor(Math.random() * BG_COLORS.length)];
-
-    // Avatars
-    const photo1 = createGeneratedAvatar(bgColor, name, hairColor, "#F3D2B8", targetGender);
-    const photo2 = createGeneratedAvatar(photo2BgColor, `${city} 📍`, hairColor, "#F3D2B8", targetGender);
+    // Real photos scraped/curated from actual real web photography
+    const photoList = targetGender === "female" ? REAL_FEMALE_PHOTOS : REAL_MALE_PHOTOS;
+    const photo1 = photoList[Math.floor(Math.random() * photoList.length)];
+    const photo2 = REAL_LIFESTYLE_PHOTOS[Math.floor(Math.random() * REAL_LIFESTYLE_PHOTOS.length)];
 
     const uid = `fake_${targetCountry}_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`;
     const email = `${name.toLowerCase()}.${Math.floor(Math.random() * 999)}@zura.app`;
@@ -249,7 +280,7 @@ export async function generateFakeProfiles(options: GeneratorOptions): Promise<U
   return createdProfiles;
 }
 
-// Purge only generated fake profiles (IDs starting with fake_ or seed_)
+// Purge generated fake profiles (IDs starting with fake_ or seed_)
 export async function purgeGeneratedProfiles(): Promise<number> {
   let count = 0;
   const snap = await getDocs(collection(db, "users"));
