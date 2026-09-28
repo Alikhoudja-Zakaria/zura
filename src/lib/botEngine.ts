@@ -19,7 +19,7 @@ export const DEFAULT_BOT_CONFIG: BotConfig = {
   minTypingDelaySec: 1.8,
   maxTypingDelaySec: 4.5,
   autoIcebreaker: true,
-  deepseekApiKey: "e961fc82-e18b-4009-bdf3-87c9c3b09437",
+  deepseekApiKey: "",
   deepseekBaseUrl: "https://api.deepseek.com",
 };
 
@@ -395,7 +395,7 @@ export async function callDeepSeekAPI(
     customApiKey ||
     process.env.DEEPSEEK_API_KEY ||
     DEFAULT_BOT_CONFIG.deepseekApiKey ||
-    "e961fc82-e18b-4009-bdf3-87c9c3b09437";
+    "";
   const baseUrl = process.env.DEEPSEEK_BASE_URL || DEFAULT_BOT_CONFIG.deepseekBaseUrl || "https://api.deepseek.com";
 
   const botCountryName =

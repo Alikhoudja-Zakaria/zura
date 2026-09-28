@@ -366,17 +366,17 @@ export default function AdminGeneratorPage() {
               <label className="text-xs font-bold text-gray-700">DeepSeek API Key</label>
               <button
                 type="button"
-                onClick={() => setBotConfig(prev => ({ ...prev, deepseekApiKey: "e961fc82-e18b-4009-bdf3-87c9c3b09437" }))}
+                onClick={() => setBotConfig(prev => ({ ...prev, deepseekApiKey: "" }))}
                 className="text-[11px] font-semibold text-violet-600 hover:underline cursor-pointer"
               >
-                Reset to Provided Key
+                Use System Env Key
               </button>
             </div>
             <input
               type="text"
               value={botConfig.deepseekApiKey || ''}
               onChange={(e) => setBotConfig(prev => ({ ...prev, deepseekApiKey: e.target.value }))}
-              placeholder="e961fc82-e18b-4009-bdf3-87c9c3b09437"
+              placeholder="Configured in DEEPSEEK_API_KEY (leave empty to use server default)"
               className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-800 focus:outline-none focus:border-violet-500"
             />
             <p className="text-[11px] text-gray-400">
