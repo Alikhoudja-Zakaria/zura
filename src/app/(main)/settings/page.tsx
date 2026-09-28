@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { user, profile, logout, deleteAccount, quickLogin } = useAuth();
+  const { user, profile, logout, deleteAccount } = useAuth();
   const router = useRouter();
   
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -98,38 +98,6 @@ export default function SettingsPage() {
               }`}>
                 {profile.status === 'pending' ? 'Under Review' : profile.status.charAt(0).toUpperCase() + profile.status.slice(1)}
               </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Testing Switcher Section */}
-        <div>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">Quick Demo Switcher</h2>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-            <p className="text-xs text-gray-500 mb-3">
-              Switch immediately between user and admin roles for instant testing:
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={async () => {
-                  await quickLogin("admin");
-                  router.push("/admin");
-                }}
-                className="py-2.5 px-3 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold transition-colors text-center"
-              >
-                🛡️ Switch to Admin
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  await quickLogin("user");
-                  router.push("/discover");
-                }}
-                className="py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-[#FF4458] border border-rose-200 rounded-xl text-xs font-bold transition-colors text-center"
-              >
-                👤 Switch to Amina
-              </button>
             </div>
           </div>
         </div>

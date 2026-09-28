@@ -1,33 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Heart, Shield, MessageCircle, Users, ChevronRight, Loader2 } from "lucide-react";
+import { Heart, Shield, MessageCircle, Users, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LandingPage() {
-  const { user, profile, quickLogin, logout } = useAuth();
-  const router = useRouter();
-  const [demoLoading, setDemoLoading] = useState<"admin" | "user" | null>(null);
-
-  const handleQuickDemo = async (role: "admin" | "user") => {
-    setDemoLoading(role);
-    try {
-      await quickLogin(role);
-      if (role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/discover");
-      }
-    } catch (e) {
-      console.error("Demo login error:", e);
-    } finally {
-      setDemoLoading(null);
-    }
-  };
+  const { user, profile, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A2E] flex flex-col">
@@ -123,64 +103,6 @@ export default function LandingPage() {
             >
               Log In
             </Link>
-          </motion.div>
-
-          {/* Quick Demo & Instant Testing card */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="mt-10 w-full max-w-lg bg-white border border-gray-200 rounded-2xl p-5 shadow-xs text-left"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                ⚡ 1-Click Demo & Quick Testing
-              </span>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                Ready to Test
-              </span>
-            </div>
-            <p className="text-xs text-gray-600 mb-4 leading-relaxed">
-              Skip typing passwords and test the app immediately with preloaded sample profiles and admin moderation tools:
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleQuickDemo("admin")}
-                disabled={!!demoLoading}
-                className="py-3 px-4 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2.5 border border-gray-900 disabled:opacity-50 text-left"
-              >
-                {demoLoading === "admin" ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
-                ) : (
-                  <>
-                    <span className="text-base">🛡️</span>
-                    <div>
-                      <div className="font-bold">Demo Admin</div>
-                      <div className="text-[10px] text-gray-400 font-normal">Reviews, users & stats</div>
-                    </div>
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemo("user")}
-                disabled={!!demoLoading}
-                className="py-3 px-4 bg-[#FF4458] hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2.5 border border-[#FF4458] disabled:opacity-50 text-left"
-              >
-                {demoLoading === "user" ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
-                ) : (
-                  <>
-                    <span className="text-base">👤</span>
-                    <div>
-                      <div className="font-bold">Demo User (Amina)</div>
-                      <div className="text-[10px] text-rose-100 font-normal">Discover & chat in Algiers</div>
-                    </div>
-                  </>
-                )}
-              </button>
-            </div>
           </motion.div>
         </section>
 

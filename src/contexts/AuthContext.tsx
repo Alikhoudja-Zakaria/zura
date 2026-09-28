@@ -11,7 +11,6 @@ import {
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { UserProfile } from "@/types";
-import { seedSampleData } from "@/lib/seedData";
 
 export interface CustomUser {
   uid: string;
@@ -31,7 +30,6 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
-  quickLogin: (asRole: "admin" | "user") => Promise<void>;
   // Aliases for convenience
   user: (FirebaseUser | CustomUser) | null;
   profile: UserProfile | null;
@@ -176,53 +174,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const quickLogin = async (asRole: "admin" | "user") => {
-    setLoading(true);
-    try {
-      // Ensure seed sample data exists
-      await seedSampleData();
-
-      const targetUid = asRole === "admin" ? "admin_demo_account" : "seed_amina_algeria";
-      const targetEmail = asRole === "admin" ? "admin@zura.app" : "amina@zura.app";
-
-      if (asRole === "admin") {
-        await setDoc(
-          doc(db, "users", targetUid),
-          {
-            uid: targetUid,
-            email: targetEmail,
-            name: "Admin Zura",
-            age: 30,
-            gender: "female",
-            country: "algeria",
-            city: "Algiers",
-            bio: "Zura Administrator",
-            lookingFor: "serious",
-            interests: ["Tech", "Community"],
-            photo1: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTMzIiB2aWV3Qm94PSIwIDAgNDAwIDUzMyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI1MzMiIGZpbGw9IiMxQTFBMkUiLz48Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9Ijg1IiBmaWxsPSIjRkY0NDU4Ii8+PHRleHQgeD0iMjAwIiB5PSI0OTAiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWkiIGZvbnQtc2l6ZT0iMjgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjRkZGRkZGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5BRE1JTjwvdGV4dD48L3N2Zz4=",
-            photo2: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTMzIiB2aWV3Qm94PSIwIDAgNDAwIDUzMyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI1MzMiIGZpbGw9IiMxQTFBMkUiLz48L3N2Zz4=",
-            status: "approved",
-            role: "admin",
-            online: true,
-            lastSeen: Date.now(),
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          },
-          { merge: true }
-        );
-      }
-
-      const customUser = { uid: targetUid, email: targetEmail };
-      setFirebaseUser(customUser);
-      await fetchProfile(targetUid);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("zura_session", JSON.stringify(customUser));
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const signOut = async () => {
     if (firebaseUser) {
       try {
@@ -279,7 +230,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         refreshProfile,
         updateProfile,
-        quickLogin,
         // Aliases
         user: firebaseUser,
         profile: userProfile,
