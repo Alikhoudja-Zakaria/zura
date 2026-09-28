@@ -2,9 +2,10 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Heart, MessageCircle, User } from 'lucide-react'
+import { getUnreadCounts } from '@/lib/firestore'
 
 // Custom Badoo Overlapping Encounters Cards Icon
 function EncountersIcon({ className = "w-6 h-6", active = false }: { className?: string; active?: boolean }) {
@@ -46,6 +47,7 @@ export default function MainLayout({
   const { user, profile, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const [unreadCounts, setUnreadCounts] = useState({ unreadLikes: 0, unreadMessages: 0 })
 
   useEffect(() => {
     if (!loading) {
@@ -56,6 +58,24 @@ export default function MainLayout({
       }
     }
   }, [user, profile, loading, router])
+
+  // Poll for real unread likes and messages
+  useEffect(() => {
+    if (!user) return
+
+    const loadCounts = async () => {
+      try {
+        const counts = await getUnreadCounts(user.uid)
+        setUnreadCounts(counts)
+      } catch (err) {
+        console.error("Failed to load unread counts:", err)
+      }
+    }
+
+    loadCounts()
+    const interval = setInterval(loadCounts, 12000)
+    return () => clearInterval(interval)
+  }, [user, pathname])
 
   if (loading || !user || !profile || profile.status !== 'approved') {
     return (
@@ -70,8 +90,8 @@ export default function MainLayout({
 
   const navItems = [
     { name: 'Encounters', href: '/discover', icon: EncountersIcon, isCustomIcon: true },
-    { name: 'Matches', href: '/matches', icon: Heart, isCustomIcon: false },
-    { name: 'Chats', href: '/matches', icon: MessageCircle, isCustomIcon: false, hasBadge: true },
+    { name: 'Likes', href: '/likes', icon: Heart, isCustomIcon: false, badgeCount: unreadCounts.unreadLikes },
+    { name: 'Chats', href: '/matches', icon: MessageCircle, isCustomIcon: false, badgeCount: unreadCounts.unreadMessages },
     { name: 'Profile', href: '/profile', icon: User, isCustomIcon: false },
   ]
 
@@ -104,6 +124,7 @@ export default function MainLayout({
           {navItems.map((item) => {
             const isActive = item.href === '/discover' ? pathname === '/discover' : pathname.startsWith(item.href)
             const Icon = item.icon
+            const hasBadge = !!item.badgeCount && item.badgeCount > 0
             return (
               <Link
                 key={item.name}
@@ -118,8 +139,10 @@ export default function MainLayout({
                   ) : (
                     <Icon size={24} className={isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'} />
                   )}
-                  {item.hasBadge && (
-                    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#FF385C] border-2 border-white"></span>
+                  {hasBadge && (
+                    <span className="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#FF385C] text-white text-[9px] font-black flex items-center justify-center border-2 border-white shadow-xs">
+                      {item.badgeCount && item.badgeCount > 9 ? '9+' : item.badgeCount}
+                    </span>
                   )}
                 </div>
                 <span className="mt-1 text-[10px] tracking-tight">{item.name}</span>
@@ -140,6 +163,7 @@ export default function MainLayout({
           {navItems.map((item) => {
             const isActive = item.href === '/discover' ? pathname === '/discover' : pathname.startsWith(item.href)
             const Icon = item.icon
+            const hasBadge = !!item.badgeCount && item.badgeCount > 0
             return (
               <Link
                 key={item.name}
@@ -149,11 +173,16 @@ export default function MainLayout({
                 }`}
                 title={item.name}
               >
-                <div className={`p-2.5 rounded-2xl transition-all ${isActive ? 'bg-gray-100 text-[#0F172A] shadow-xs' : 'group-hover:bg-gray-50'}`}>
+                <div className={`relative p-2.5 rounded-2xl transition-all ${isActive ? 'bg-gray-100 text-[#0F172A] shadow-xs' : 'group-hover:bg-gray-50'}`}>
                   {item.isCustomIcon ? (
                     <EncountersIcon className="w-6 h-6" active={isActive} />
                   ) : (
                     <Icon size={26} className={isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'} />
+                  )}
+                  {hasBadge && (
+                    <span className="absolute 1 top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#FF385C] text-white text-[9px] font-black flex items-center justify-center border-2 border-white shadow-xs">
+                      {item.badgeCount && item.badgeCount > 9 ? '9+' : item.badgeCount}
+                    </span>
                   )}
                 </div>
               </Link>

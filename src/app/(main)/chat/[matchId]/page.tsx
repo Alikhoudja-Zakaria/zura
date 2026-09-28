@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { subscribeToMessages, sendMessage, getMatchById, getUserProfile } from '@/lib/firestore'
+import { subscribeToMessages, sendMessage, getMatchById, getUserProfile, markMessagesAsRead } from '@/lib/firestore'
 import { Message, Match, UserProfile } from '@/types'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import ReportModal from '@/components/ui/ReportModal'
@@ -48,9 +48,12 @@ export default function ChatPage() {
     if (!matchId) return
     const unsubscribe = subscribeToMessages(matchId, (newMessages) => {
       setMessages(newMessages)
+      if (user) {
+        markMessagesAsRead(matchId, user.uid)
+      }
     })
     return () => unsubscribe()
-  }, [matchId])
+  }, [matchId, user])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })

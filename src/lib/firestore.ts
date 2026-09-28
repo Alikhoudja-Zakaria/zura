@@ -206,6 +206,89 @@ export function subscribeToMessages(
   });
 }
 
+export async function markMessagesAsRead(matchId: string, currentUserId: string): Promise<void> {
+  try {
+    const q = query(
+      collection(db, "matches", matchId, "messages"),
+      where("read", "==", false)
+    );
+    const snapshot = await getDocs(q);
+    const updates = snapshot.docs
+      .filter((d) => (d.data() as Message).senderId !== currentUserId)
+      .map((d) => updateDoc(d.ref, { read: true }));
+    await Promise.all(updates);
+  } catch (error) {
+    console.error("Error marking messages as read:", error);
+  }
+}
+
+// ============================================
+// LIKES & NOTIFICATIONS OPERATIONS
+// ============================================
+
+export async function getUsersWhoLikedYou(currentUserId: string): Promise<UserProfile[]> {
+  try {
+    const q = query(
+      collection(db, "swipes"),
+      where("swipedId", "==", currentUserId),
+      where("action", "==", "like")
+    );
+    const snapshot = await getDocs(q);
+    const swiperIds = snapshot.docs.map((doc) => (doc.data() as Swipe).swiperId);
+
+    // Filter out users that current user has already swiped
+    const mySwipes = await getSwipedUserIds(currentUserId);
+    const pendingLikerIds = swiperIds.filter((id) => !mySwipes.includes(id));
+
+    const likerProfiles: UserProfile[] = [];
+    for (const uid of pendingLikerIds) {
+      const p = await getUserProfile(uid);
+      if (p && p.status === "approved") {
+        likerProfiles.push(p);
+      }
+    }
+    return likerProfiles;
+  } catch (error) {
+    console.error("Error in getUsersWhoLikedYou:", error);
+    return [];
+  }
+}
+
+export async function getUnreadCounts(currentUserId: string): Promise<{ unreadLikes: number; unreadMessages: number }> {
+  try {
+    // 1. Pending likes you haven't swiped back yet
+    const likers = await getUsersWhoLikedYou(currentUserId);
+    const unreadLikes = likers.length;
+
+    // 2. Unread messages across active matches
+    const matches = await getUserMatches(currentUserId);
+    let unreadMessages = 0;
+    
+    const recentMatches = matches.slice(0, 10);
+    const checks = recentMatches.map(async (m) => {
+      try {
+        const q = query(
+          collection(db, "matches", m.id, "messages"),
+          where("read", "==", false),
+          limit(5)
+        );
+        const snap = await getDocs(q);
+        return snap.docs.filter((d) => (d.data() as Message).senderId !== currentUserId).length;
+      } catch {
+        return 0;
+      }
+    });
+
+    const counts = await Promise.all(checks);
+    unreadMessages = counts.reduce((acc, c) => acc + c, 0);
+
+    return { unreadLikes, unreadMessages };
+  } catch (error) {
+    console.error("Error getting unread counts:", error);
+    return { unreadLikes: 0, unreadMessages: 0 };
+  }
+}
+
 // ============================================
 // REPORT OPERATIONS
 // ============================================
